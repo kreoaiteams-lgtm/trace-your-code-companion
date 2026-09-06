@@ -2,8 +2,7 @@ import { createAPIFileRoute } from '@tanstack/react-start/api';
 
 export const APIRoute = createAPIFileRoute('/api/chat')({
   POST: async ({ request }) => {
-    // HARDCODED for hackathon demo to guarantee it works even if .env is missing
-    const apiKey = process.env.SARVAM_API_KEY || "sk_fxf6zcca_XgJcXOBYg2Nwo3shXo7pKCyp";
+    const apiKey = process.env.SARVAM_API_KEY;
 
     if (!apiKey) {
       return new Response(JSON.stringify({ 
