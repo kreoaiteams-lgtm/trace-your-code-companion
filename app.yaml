@@ -1,0 +1,18 @@
+command:
+  - npm
+  - run
+  - start
+
+env:
+  - name: NODE_ENV
+    value: production
+  - name: SARVAM_API_KEY
+    valueFrom: sarvam-api-key
+  - name: SUPABASE_URL
+    valueFrom: supabase-url
+  - name: SUPABASE_PUBLISHABLE_KEY
+    valueFrom: supabase-publishable-key
+  - name: SUPABASE_SECRET_KEY
+    valueFrom: supabase-secret-key
+  - name: SUPABASE_JWKS_URL
+    valueFrom: supabase-jwks-url
