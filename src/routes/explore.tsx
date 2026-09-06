@@ -18,15 +18,18 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  mockGraphData,
-  getNodeDependencies,
-  getNodeDependents,
-  getRiskColor,
-  getRiskLabel,
-  type GraphNode,
-  type GraphEdge,
-} from "@/lib/mock-data";
+import { getRiskColor, getRiskLabel, type GraphNode, type GraphEdge } from "@/lib/mock-data";
+import { entireGraphData } from "@/lib/entire-graph-data";
+
+const getGraphDependencies = (nodeId: string) =>
+  entireGraphData.nodes.filter((node) =>
+    entireGraphData.edges.some((edge) => edge.source === nodeId && edge.target === node.id),
+  );
+
+const getGraphDependents = (nodeId: string) =>
+  entireGraphData.nodes.filter((node) =>
+    entireGraphData.edges.some((edge) => edge.source === node.id && edge.target === nodeId),
+  );
 
 export const Route = createFileRoute("/explore")({
   head: () => ({
@@ -131,13 +134,13 @@ function GraphExplorer() {
   const width = 900;
   const height = 600;
 
-  const filteredNodes = mockGraphData.nodes.filter((n) => {
+  const filteredNodes = entireGraphData.nodes.filter((n) => {
     if (filterType !== "all" && n.type !== filterType) return false;
     if (searchQuery && !n.label.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
-  const filteredEdges = mockGraphData.edges.filter(
+  const filteredEdges = entireGraphData.edges.filter(
     (e) =>
       filteredNodes.some((n) => n.id === e.source) && filteredNodes.some((n) => n.id === e.target),
   );
@@ -146,7 +149,7 @@ function GraphExplorer() {
 
   const getConnectedIds = useCallback((nodeId: string) => {
     const connected = new Set<string>();
-    mockGraphData.edges.forEach((e) => {
+    entireGraphData.edges.forEach((e) => {
       if (e.source === nodeId) connected.add(e.target);
       if (e.target === nodeId) connected.add(e.source);
     });
@@ -310,10 +313,10 @@ function GraphExplorer() {
                     stroke={
                       isHighlighted
                         ? getRiskColor(
-                            (mockGraphData.nodes.find((n) => n.id === edge.source)?.riskScore ??
+                            (entireGraphData.nodes.find((n) => n.id === edge.source)?.riskScore ??
                               0 +
-                                (mockGraphData.nodes.find((n) => n.id === edge.target)?.riskScore ??
-                                  0)) / 2,
+                                (entireGraphData.nodes.find((n) => n.id === edge.target)
+                                  ?.riskScore ?? 0)) / 2,
                           )
                         : "#cbd5e1"
                     }
@@ -460,7 +463,7 @@ function GraphExplorer() {
               </div>
               <div>
                 <span className="font-semibold text-foreground">
-                  {mockGraphData.metadata.avgComplexity.toFixed(1)}
+                  {entireGraphData.metadata.avgComplexity.toFixed(1)}
                 </span>{" "}
                 <span className="text-muted-foreground">avg complexity</span>
               </div>
@@ -537,10 +540,10 @@ function GraphExplorer() {
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
                     <ChevronRight className="size-3" /> Dependencies (
-                    {getNodeDependencies(selectedNode.id).length})
+                    {getGraphDependencies(selectedNode.id).length})
                   </h4>
                   <div className="space-y-1">
-                    {getNodeDependencies(selectedNode.id).map((dep) => (
+                    {getGraphDependencies(selectedNode.id).map((dep) => (
                       <button
                         key={dep.id}
                         onClick={() => setSelectedNode(dep)}
@@ -561,10 +564,10 @@ function GraphExplorer() {
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
                     <ChevronRight className="size-3" /> Dependents (
-                    {getNodeDependents(selectedNode.id).length})
+                    {getGraphDependents(selectedNode.id).length})
                   </h4>
                   <div className="space-y-1">
-                    {getNodeDependents(selectedNode.id).map((dep) => (
+                    {getGraphDependents(selectedNode.id).map((dep) => (
                       <button
                         key={dep.id}
                         onClick={() => setSelectedNode(dep)}

@@ -18,15 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  mockGraphData,
   mockImpactReports,
-  getNodeDependencies,
-  getNodeDependents,
   getRiskColor,
   getRiskLabel,
   type GraphNode,
   type ImpactReport,
 } from "@/lib/mock-data";
+import { entireGraphData } from "@/lib/entire-graph-data";
 import { createTraceSession } from "@/lib/trace-store";
 
 export const Route = createFileRoute("/impact")({
@@ -81,7 +79,7 @@ function ImpactAnalyzer() {
   );
   const [checkpointSaved, setCheckpointSaved] = useState(false);
 
-  const filteredFiles = mockGraphData.nodes
+  const filteredFiles = entireGraphData.nodes
     .filter(
       (n) =>
         n.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -98,14 +96,18 @@ function ImpactAnalyzer() {
       return;
     }
 
-    const deps = getNodeDependents(node.id);
+    const deps = entireGraphData.nodes.filter((candidate) =>
+      entireGraphData.edges.some((edge) => edge.source === candidate.id && edge.target === node.id),
+    );
     const transitive = new Set<string>();
     const visited = new Set<string>();
 
     function collectTransitive(id: string) {
       if (visited.has(id)) return;
       visited.add(id);
-      const dts = getNodeDependents(id);
+      const dts = entireGraphData.nodes.filter((candidate) =>
+        entireGraphData.edges.some((edge) => edge.source === candidate.id && edge.target === id),
+      );
       dts.forEach((d) => {
         transitive.add(d.path);
         collectTransitive(d.id);
