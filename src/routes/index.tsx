@@ -105,13 +105,12 @@ function TraceApp() {
     <div className="flex h-[calc(100vh-48px)] lg:h-screen w-full flex-col relative overflow-hidden bg-background fade-in">
       {/* Background Image Layer */}
       <div 
-        className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+        className="absolute inset-0 z-0 opacity-40 pointer-events-none"
         style={{
           backgroundImage: "url('/chat-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          mixBlendMode: "luminosity"
+          backgroundRepeat: "no-repeat"
         }}
       />
       
