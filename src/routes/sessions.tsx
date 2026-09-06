@@ -23,11 +23,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  mockSessions,
-  getSeverityColor,
   type TraceSession,
   type SessionFinding,
-} from "@/lib/mock-data";
+} from "@/lib/types";
+
+export function getSeverityColor(severity: string) {
+  switch (severity) {
+    case "critical": return "#ef4444";
+    case "high": return "#f97316";
+    case "medium": return "#eab308";
+    case "low": return "#3b82f6";
+    case "safe": return "#22c55e";
+    default: return "#94a3b8";
+  }
+}
 import { readTraceSessions, updateTraceSession } from "@/lib/trace-store";
 
 export const Route = createFileRoute("/sessions")({
@@ -114,12 +123,22 @@ function FindingCard({ finding }: { finding: SessionFinding }) {
 
 function SessionManager() {
   const [selectedSession, setSelectedSession] = useState<TraceSession | null>(null);
-  const [sessions, setSessions] = useState<TraceSession[]>(() => readTraceSessions());
+  const [sessions, setSessions] = useState<TraceSession[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const refresh = () => setSessions(readTraceSessions());
+    const fetchSessions = async () => {
+      setLoading(true);
+      const data = await readTraceSessions();
+      setSessions(data);
+      setLoading(false);
+    };
+
+    fetchSessions();
+
+    const refresh = () => fetchSessions();
     window.addEventListener("traceai:sessions-updated", refresh);
     return () => window.removeEventListener("traceai:sessions-updated", refresh);
   }, []);
@@ -130,28 +149,21 @@ function SessionManager() {
     return true;
   });
 
-  const createNewTrace = () => {
+  const createNewTrace = async () => {
     const title = window.prompt("Name this trace session", "New codebase investigation");
     if (!title?.trim()) return;
-    const session: TraceSession = {
-      id: `trace-${Date.now()}`,
+    
+    const session = await createTraceSession({
       title: title.trim(),
       description: "New trace session ready for investigation.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      author: "You",
-      authorAvatar: "YO",
-      status: "active",
       filesExplored: [],
       questionsAsked: [],
       findings: [],
-      checkpointId: `ckpt-local-${Date.now().toString(36)}`,
-      tags: ["trace"],
-    };
-    const next = [session, ...readTraceSessions()];
-    window.localStorage.setItem("traceai.sessions.v1", JSON.stringify(next));
-    window.dispatchEvent(new CustomEvent("traceai:sessions-updated"));
-    setSelectedSession(session);
+    });
+    
+    if (session) {
+      setSelectedSession(session);
+    }
   };
 
   const shareSession = async () => {
@@ -161,10 +173,10 @@ function SessionManager() {
     window.alert("Checkpoint reference copied to your clipboard.");
   };
 
-  const resumeSession = () => {
+  const resumeSession = async () => {
     if (!selectedSession) return;
-    const updated = updateTraceSession(selectedSession.id, { status: "active" });
-    if (updated) setSelectedSession(updated);
+    await updateTraceSession(selectedSession.id, { status: "active" });
+    setSelectedSession(prev => prev ? { ...prev, status: "active" } : null);
   };
 
   const formatDate = (dateStr: string) => {

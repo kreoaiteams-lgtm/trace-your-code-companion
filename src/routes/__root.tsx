@@ -99,7 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@400;500;600&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,7 +125,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function AuthGatedLayout() {
   const { isAuthenticated } = useAuth();
   const routerState = useRouterState();
-  const isLoginRoute = routerState.location.pathname === "/login";
+  const isLoginRoute = ["/login", "/onboarding"].includes(routerState.location.pathname);
 
   // Login page renders without sidebar wrapper
   if (isLoginRoute) {
@@ -155,4 +155,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

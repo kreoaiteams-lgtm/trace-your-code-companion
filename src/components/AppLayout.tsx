@@ -11,6 +11,8 @@ import {
   Network,
   LogOut,
   Settings,
+  ChevronDown,
+  MessageSquare,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -27,15 +29,11 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/AuthProvider";
 
-
-import { Presentation } from "lucide-react";
-
 const navItems = [
   { label: "Home", icon: Home, href: "/" },
   { label: "Impact", icon: Shield, href: "/impact" },
   { label: "Sessions", icon: Clock, href: "/sessions" },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
-  { label: "Deck", icon: Presentation, href: "/ppt" },
 ];
 
 const repositories = [
@@ -48,7 +46,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout, activeRepo, setActiveRepo } = useAuth();
+  const {
+    user,
+    logout,
+    activeRepo,
+    setActiveRepo,
+    conversations,
+    activeConversation,
+    setActiveConversation,
+    addConversation,
+  } = useAuth();
 
   return (
     <div className="mesh-bg min-h-screen text-foreground flex">
@@ -74,7 +81,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <nav className="space-y-0.5" aria-label="Main navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
+            const isActive =
+              currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
             return (
               <Link
                 key={item.label}
@@ -104,6 +112,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               size="icon"
               className="size-7 rounded-md"
               aria-label="Add repository"
+              onClick={() => window.location.assign("/connect")}
             >
               <Plus className="size-3.5" />
             </Button>
@@ -112,18 +121,54 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {repositories.map((repo) => {
               const isActive = activeRepo === repo.name;
               return (
-                <Button
-                  key={repo.name}
-                  variant="ghost"
-                  onClick={() => setActiveRepo(repo.name)}
-                  className={cn(
-                    "w-full justify-start gap-3 rounded-lg px-3 font-normal text-sm transition-all duration-200",
-                    isActive ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                <div key={repo.name} className="space-y-0.5">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setActiveRepo(repo.name)}
+                    className={cn(
+                      "w-full justify-start gap-2 rounded-lg px-3 font-normal text-sm transition-all duration-200",
+                      isActive
+                        ? "bg-muted text-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <span className={cn("size-2.5 rounded-full shadow-sm", repo.color)} />
+                    <span className="truncate">{repo.name}</span>
+                    <ChevronDown
+                      className={cn(
+                        "ml-auto size-3.5 transition-transform",
+                        isActive && "rotate-180",
+                      )}
+                    />
+                  </Button>
+                  {isActive && (
+                    <div className="ml-3 border-l border-border pl-2">
+                      {(conversations[repo.name] ?? []).map((conversation) => (
+                        <button
+                          type="button"
+                          key={conversation}
+                          onClick={() => setActiveConversation(conversation)}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
+                            activeConversation === conversation
+                              ? "bg-foreground/10 text-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          )}
+                        >
+                          <MessageSquare className="size-3 shrink-0" />
+                          <span className="truncate">{conversation}</span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => addConversation(repo.name)}
+                        className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <Plus className="size-3" /> New conversation
+                      </button>
+                    </div>
                   )}
-                >
-                  <span className={cn("size-2.5 rounded-full shadow-sm", repo.color)} />
-                  <span className="truncate">{repo.name}</span>
-                </Button>
+                </div>
               );
             })}
           </div>
@@ -138,12 +183,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
               >
                 <Avatar className="size-8 border border-border shadow-sm group-hover:scale-105 transition-transform">
                   <AvatarFallback className="bg-foreground text-xs font-semibold text-background">
-                    {user?.name?.split(" ").map(n => n[0]).join("") || "U"}
+                    {user?.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("") || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="min-w-0 flex-1 text-left">
                   <span className="block truncate text-sm font-medium">{user?.name || "User"}</span>
-                  <span className="block truncate text-xs text-muted-foreground">@{user?.username || "user"}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    @{user?.username || "user"}
+                  </span>
                 </span>
                 <MoreHorizontal className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </Button>
@@ -156,7 +206,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={logout}>
+              <DropdownMenuItem
+                className="gap-2 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                onClick={logout}
+              >
                 <LogOut className="size-4" />
                 <span>Sign out</span>
               </DropdownMenuItem>
@@ -166,11 +219,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex-1 lg:pl-64 w-full flex flex-col">
-
-
-        <main className="flex-1 overflow-auto w-full relative">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto w-full relative">{children}</main>
       </div>
 
       {sidebarOpen && (

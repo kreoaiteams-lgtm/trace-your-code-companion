@@ -11,6 +11,10 @@ interface AuthContextType {
   user: User | null;
   activeRepo: string;
   setActiveRepo: (repo: string) => void;
+  activeConversation: string;
+  conversations: Record<string, string[]>;
+  setActiveConversation: (conversation: string) => void;
+  addConversation: (repo: string, title?: string) => string;
   login: (user: User) => void;
   logout: () => void;
 }
@@ -23,8 +27,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("trace-user");
     return stored ? JSON.parse(stored) : null;
   });
-  
+
   const [activeRepo, setActiveRepo] = useState<string>("trace-web");
+  const [conversations, setConversations] = useState<Record<string, string[]>>({
+    "trace-web": ["Architecture brainstorm", "Auth flow review"],
+    "signal-api": ["API reliability ideas"],
+    "design-system": ["Accessibility audit"],
+  });
+  const [activeConversation, setActiveConversationState] = useState("Architecture brainstorm");
+
+  const setActiveConversation = (conversation: string) => {
+    setActiveConversationState(conversation);
+  };
+
+  const addConversation = (repo: string, title = "New conversation") => {
+    const current = conversations[repo] ?? [];
+    const nextTitle = current.includes(title) ? `${title} ${current.length + 1}` : title;
+    setConversations((previous) => ({
+      ...previous,
+      [repo]: [...(previous[repo] ?? []), nextTitle],
+    }));
+    setActiveRepo(repo);
+    setActiveConversationState(nextTitle);
+    return nextTitle;
+  };
 
   const login = (userData: User) => {
     setUser(userData);
@@ -43,6 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         activeRepo,
         setActiveRepo,
+        activeConversation,
+        conversations,
+        setActiveConversation,
+        addConversation,
         login,
         logout,
       }}

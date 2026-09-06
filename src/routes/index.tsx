@@ -1,5 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowUp, Bug, FolderOpen, Hammer, Mic, Plus, RefreshCw, Telescope, Sparkles, User as UserIcon, ShieldCheck } from "lucide-react";
+import {
+  ArrowUp,
+  Bug,
+  FolderOpen,
+  Hammer,
+  Mic,
+  RefreshCw,
+  Telescope,
+  Sparkles,
+  User as UserIcon,
+  ShieldCheck,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,10 +19,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: "TraceAI" },
-      { name: "description", content: "What should we work on?" },
-    ],
+    meta: [{ title: "TraceAI" }, { name: "description", content: "What should we work on?" }],
   }),
   component: TraceApp,
 });
@@ -46,20 +54,75 @@ type Message = {
   content: string;
 };
 
+type SpeechRecognitionLike = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
 function TraceApp() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
-  
-  const { isAuthenticated, activeRepo } = useAuth();
+  const [isListening, setIsListening] = useState(false);
+
+  const { isAuthenticated, activeRepo, activeConversation } = useAuth();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate({ to: "/login" });
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    setMessages([]);
+    setInput("");
+  }, [activeRepo, activeConversation]);
+
+  useEffect(() => () => recognitionRef.current?.stop(), []);
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+
+    if (!Recognition) {
+      setInput((current) => current || "Voice input is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? "";
+      setInput((current) => (current ? `${current} ${transcript}` : transcript));
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -74,7 +137,7 @@ function TraceApp() {
 
   const handleSubmit = async (text: string = input) => {
     if (!text.trim() || isThinking) return;
-    
+
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -138,28 +201,29 @@ function TraceApp() {
   return (
     <div className="flex h-[calc(100vh-48px)] lg:h-screen w-full flex-col relative overflow-hidden bg-background fade-in">
       {/* Background Image Layer */}
-      <div 
+      <div
         className="absolute inset-0 z-0 opacity-40 pointer-events-none"
         style={{
           backgroundImage: "url('/chat-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
+          backgroundRepeat: "no-repeat",
         }}
       />
-      
+
       {/* Chat Area */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 w-full overflow-y-auto pb-[180px] scroll-smooth z-10"
-      >
+      <div ref={scrollRef} className="flex-1 w-full overflow-y-auto pb-[180px] scroll-smooth z-10">
         <div className="mx-auto w-full max-w-3xl px-6 pt-12 flex flex-col">
           {isInitialScreen ? (
             <div className="flex w-full flex-col items-center justify-center pt-[22vh]">
               {/* Center Hero */}
               <div className="flex flex-col items-center text-center slide-up mb-12">
                 <h1 className="text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
-                  What in <span className="underline decoration-muted-foreground/40 underline-offset-4 font-semibold">{activeRepo}</span> bothers you?
+                  What in{" "}
+                  <span className="underline decoration-muted-foreground/40 underline-offset-4 font-semibold">
+                    {activeRepo}
+                  </span>{" "}
+                  bothers you?
                 </h1>
               </div>
 
@@ -186,11 +250,11 @@ function TraceApp() {
           ) : (
             <div className="flex flex-col gap-6 slide-up w-full">
               {messages.map((msg) => (
-                <div 
-                  key={msg.id} 
+                <div
+                  key={msg.id}
                   className={cn(
                     "flex w-full",
-                    msg.role === "user" ? "justify-end" : "justify-start"
+                    msg.role === "user" ? "justify-end" : "justify-start",
                   )}
                 >
                   {msg.role === "ai" && (
@@ -198,18 +262,20 @@ function TraceApp() {
                       <Sparkles className="size-4" />
                     </div>
                   )}
-                  
-                  <div className={cn(
-                    "px-4 py-3 text-[15px] leading-relaxed max-w-[85%]",
-                    msg.role === "user" 
-                      ? "bg-muted text-foreground rounded-2xl rounded-tr-sm"
-                      : "text-foreground"
-                  )}>
+
+                  <div
+                    className={cn(
+                      "px-4 py-3 text-[15px] leading-relaxed max-w-[85%]",
+                      msg.role === "user"
+                        ? "bg-muted text-foreground rounded-2xl rounded-tr-sm"
+                        : "text-foreground",
+                    )}
+                  >
                     {msg.content}
                   </div>
                 </div>
               ))}
-              
+
               {isThinking && (
                 <div className="flex w-full justify-start items-center fade-in">
                   <div className="size-8 rounded-lg bg-foreground text-background flex items-center justify-center shrink-0 shadow-md mr-4">
@@ -228,28 +294,26 @@ function TraceApp() {
 
       {/* Floating Input Dock */}
       <div className="absolute bottom-6 left-0 right-0 z-20 mx-auto w-full max-w-3xl px-6">
-        <div className={cn(
-          "flex flex-col border bg-card shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden transition-all duration-300",
-          isThinking ? "border-foreground/20 shadow-foreground/5" : "border-border/60",
-          isInitialScreen ? "rounded-2xl" : "rounded-[28px]"
-        )}>
+        <div
+          className={cn(
+            "flex flex-col border bg-card shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden transition-all duration-300",
+            isThinking ? "border-foreground/20 shadow-foreground/5" : "border-border/60",
+            isInitialScreen ? "rounded-2xl" : "rounded-[28px]",
+          )}
+        >
           {/* Input Header */}
           {isInitialScreen && (
             <div className="flex items-center gap-2 bg-muted/20 px-4 py-2 border-b border-border/30">
               <FolderOpen className="size-3.5 text-muted-foreground" />
               <span className="text-[12px] font-medium text-muted-foreground">{activeRepo}</span>
+              <span className="text-[12px] text-muted-foreground/50">/</span>
+              <span className="text-[12px] font-medium text-foreground/70">
+                {activeConversation}
+              </span>
             </div>
           )}
 
           <div className="flex items-end p-2">
-            {isInitialScreen && (
-              <div className="pb-1 pr-1">
-                <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-muted text-muted-foreground">
-                  <Plus className="size-4" />
-                </Button>
-              </div>
-            )}
-
             {/* Text Area */}
             <textarea
               value={input}
@@ -262,29 +326,40 @@ function TraceApp() {
               style={{
                 height: "auto",
                 minHeight: "40px",
-                maxHeight: "150px"
+                maxHeight: "150px",
               }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = target.scrollHeight + 'px';
+                target.style.height = "auto";
+                target.style.height = target.scrollHeight + "px";
               }}
             />
 
             {/* Right Buttons */}
             <div className="flex items-center gap-1 pb-1 pl-1">
               {isInitialScreen && (
-                <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-muted text-muted-foreground">
-                  <Mic className="size-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  disabled={isThinking}
+                  aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                  className={cn(
+                    "size-8 rounded-full hover:bg-muted text-muted-foreground",
+                    isListening && "bg-red-500/15 text-red-500 hover:bg-red-500/20",
+                  )}
+                >
+                  <Mic className={cn("size-4", isListening && "animate-pulse")} />
                 </Button>
               )}
               <button
                 onClick={() => handleSubmit(input)}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-full transition-all duration-300",
-                  input.trim() 
-                    ? "bg-foreground text-background hover:scale-105 active:scale-95 shadow-md shadow-foreground/20" 
-                    : "bg-muted text-muted-foreground/50"
+                  input.trim()
+                    ? "bg-foreground text-background hover:scale-105 active:scale-95 shadow-md shadow-foreground/20"
+                    : "bg-muted text-muted-foreground/50",
                 )}
                 disabled={!input.trim() || isThinking}
               >
@@ -294,7 +369,9 @@ function TraceApp() {
           </div>
         </div>
         <div className="flex justify-between items-center mt-3 px-1">
-          <p className="text-[11px] text-muted-foreground/60">TraceAI can make mistakes. Consider verifying important information.</p>
+          <p className="text-[11px] text-muted-foreground/60">
+            TraceAI can make mistakes. Consider verifying important information.
+          </p>
           <div className="flex items-center gap-1 text-[11px] text-emerald-600/80 dark:text-emerald-500/70 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full">
             <ShieldCheck className="size-3" />
             <span>Local & Private</span>

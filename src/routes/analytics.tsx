@@ -33,8 +33,14 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { mockAnalytics, getRiskColor } from "@/lib/mock-data";
 import { loadAnalytics, type AnalyticsSnapshot } from "@/lib/databricks-analytics";
+
+export function getRiskColor(risk: number) {
+  if (risk > 80) return "#ef4444";
+  if (risk > 60) return "#f97316";
+  if (risk > 40) return "#eab308";
+  return "#22c55e";
+}
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -53,7 +59,7 @@ export const Route = createFileRoute("/analytics")({
 function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("30d");
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot>({
-    data: mockAnalytics,
+    data: { changeHeatmap: [], riskTrends: [], complexityHotspots: [], moduleCoupling: [], weeklyActivity: [], languageDistribution: [] },
     source: "demo-fallback",
     generatedAt: "",
   });

@@ -21,14 +21,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  mockImpactReports,
-  getRiskColor,
-  getRiskLabel,
   type GraphNode,
   type ImpactReport,
-} from "@/lib/mock-data";
+} from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 import { entireGraphData } from "@/lib/entire-graph-data";
 import { createTraceSession } from "@/lib/trace-store";
+
+export function getRiskColor(risk: number) {
+  if (risk > 80) return "#ef4444";
+  if (risk > 60) return "#f97316";
+  if (risk > 40) return "#eab308";
+  return "#22c55e";
+}
 
 export const Route = createFileRoute("/impact")({
   head: () => ({
@@ -116,7 +121,7 @@ function ImpactAnalyzer() {
     }
   };
 
-  const analyzeFile = (node: GraphNode) => {
+  const analyzeFile = async (node: GraphNode) => {
     setSelectedFile(node.id);
     setCheckpointSaved(false);
 
@@ -125,9 +130,21 @@ function ImpactAnalyzer() {
     setSymbolQuery(symbolName);
     runLiveGraphAnalysis(symbolName);
 
-    const existing = mockImpactReports.find((r) => r.targetFile === node.path);
-    if (existing) {
-      setActiveReport(existing);
+    const { data } = await supabase.from('impact_reports').select('*').eq('target_file', node.path).maybeSingle();
+    
+    if (data) {
+      setActiveReport({
+        targetFile: data.target_file,
+        targetFunction: data.target_function,
+        riskScore: data.risk_score,
+        blastRadius: data.blast_radius,
+        directDependents: data.direct_dependents,
+        transitiveDependents: data.transitive_dependents,
+        affectedTests: data.affected_tests,
+        suggestions: data.suggestions,
+        severity: data.severity,
+        createdAt: data.created_at
+      } as ImpactReport);
       return;
     }
 

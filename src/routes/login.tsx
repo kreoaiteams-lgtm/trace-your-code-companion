@@ -25,7 +25,7 @@ function LoginPage() {
 
   const finishLogin = (name: string, username: string) => {
     login({ name, username });
-    navigate({ to: "/connect" });
+    navigate({ to: "/onboarding" });
   };
 
   const handleGitHubLogin = () => {

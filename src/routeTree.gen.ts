@@ -14,6 +14,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PptRouteImport } from './routes/ppt'
 import { Route as SessionsRouteImport } from './routes/sessions'
 
@@ -42,6 +43,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PptRoute = PptRouteImport.update({
   id: '/ppt',
   path: '/ppt',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/connect': typeof ConnectRoute
   '/impact': typeof ImpactRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/ppt': typeof PptRoute
   '/sessions': typeof SessionsRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/connect': typeof ConnectRoute
   '/impact': typeof ImpactRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/ppt': typeof PptRoute
   '/sessions': typeof SessionsRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/connect': typeof ConnectRoute
   '/impact': typeof ImpactRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/ppt': typeof PptRoute
   '/sessions': typeof SessionsRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/impact'
     | '/login'
+    | '/onboarding'
     | '/ppt'
     | '/sessions'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/impact'
     | '/login'
+    | '/onboarding'
     | '/ppt'
     | '/sessions'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/impact'
     | '/login'
+    | '/onboarding'
     | '/ppt'
     | '/sessions'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   ConnectRoute: typeof ConnectRoute
   ImpactRoute: typeof ImpactRoute
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   PptRoute: typeof PptRoute
   SessionsRoute: typeof SessionsRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ppt': {
       id: '/ppt'
       path: '/ppt'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectRoute: ConnectRoute,
   ImpactRoute: ImpactRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   PptRoute: PptRoute,
   SessionsRoute: SessionsRoute,
 }
