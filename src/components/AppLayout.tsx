@@ -55,12 +55,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="w-full relative h-16 -mx-4 -mt-5 mb-5 flex items-center justify-center border-b border-sidebar-border bg-white">
-          <img src="/logo.png" alt="TraceAI Banner" className="h-10 w-auto object-contain" />
+        <div className="flex h-16 items-center px-2 mb-2">
+          <h2 className="font-sans text-2xl font-bold tracking-tighter">trace</h2>
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden absolute top-3 right-3 hover:bg-black/5 size-8"
+            className="lg:hidden absolute top-4 right-3 hover:bg-muted size-8"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close navigation"
           >
