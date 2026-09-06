@@ -59,6 +59,15 @@ function renderMarkdown(text: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
+    // Parse raw XML tool calls from Sarvam
+    .replace(/&lt;tool_call&gt;([\s\S]*?)&lt;\/tool_call&gt;/g, (_match, content) => {
+      const nameMatch = content.match(/^\s*([a-zA-Z0-9_-]+)/);
+      const toolName = nameMatch ? nameMatch[1] : 'tool';
+      return `<div class="my-2 px-2.5 py-1.5 rounded-md bg-muted border border-border text-xs font-mono text-muted-foreground flex items-center gap-2 w-fit">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        AI used tool: ${toolName}
+      </div>`;
+    })
     // Code blocks (```)
     .replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) =>
       `<pre class="bg-muted/60 rounded-lg p-3 overflow-x-auto text-xs my-2"><code>${code.trim()}</code></pre>`)
