@@ -50,9 +50,9 @@ We adapted our app to handle sensitive repositories where raw prompts/transcript
 1. Install dependencies: `npm install`
 2. Set up environment variables in `.env` (or Vercel):
    ```
-   SUPABASE_URL=https://vdzhnlmeiicyypbolffr.supabase.co
-   SUPABASE_PUBLISHABLE_KEY=sb_publishable_KLH7PMOPFlPJM5GeRHVwrQ_CTdrntkg
-   SARVAM_API_KEY=sk_fxf6zcca_XgJcXOBYg2Nwo3shXo7pKCyp
+   SUPABASE_URL=YOUR_SUPABASE_URL
+   SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
+   SARVAM_API_KEY=YOUR_SARVAM_API_KEY
    ```
 3. Run the development server: `npm run dev`
 4. *(Optional)* Seed the Supabase database: `npx tsx scripts/seed-supabase.ts`
