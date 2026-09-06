@@ -28,11 +28,14 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/AuthProvider";
 
 
+import { Presentation } from "lucide-react";
+
 const navItems = [
   { label: "Home", icon: Home, href: "/" },
   { label: "Impact", icon: Shield, href: "/impact" },
   { label: "Sessions", icon: Clock, href: "/sessions" },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
+  { label: "Deck", icon: Presentation, href: "/ppt" },
 ];
 
 const repositories = [

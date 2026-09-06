@@ -14,6 +14,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PptRouteImport } from './routes/ppt'
 import { Route as SessionsRouteImport } from './routes/sessions'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PptRoute = PptRouteImport.update({
+  id: '/ppt',
+  path: '/ppt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SessionsRoute = SessionsRouteImport.update({
   id: '/sessions',
   path: '/sessions',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/connect': typeof ConnectRoute
   '/impact': typeof ImpactRoute
   '/login': typeof LoginRoute
+  '/ppt': typeof PptRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/connect': typeof ConnectRoute
   '/impact': typeof ImpactRoute
   '/login': typeof LoginRoute
+  '/ppt': typeof PptRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRoutesById {
@@ -70,14 +78,28 @@ export interface FileRoutesById {
   '/connect': typeof ConnectRoute
   '/impact': typeof ImpactRoute
   '/login': typeof LoginRoute
+  '/ppt': typeof PptRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/analytics' | '/connect' | '/impact' | '/login' | '/sessions'
+    | '/'
+    | '/analytics'
+    | '/connect'
+    | '/impact'
+    | '/login'
+    | '/ppt'
+    | '/sessions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analytics' | '/connect' | '/impact' | '/login' | '/sessions'
+  to:
+    | '/'
+    | '/analytics'
+    | '/connect'
+    | '/impact'
+    | '/login'
+    | '/ppt'
+    | '/sessions'
   id:
     | '__root__'
     | '/'
@@ -85,6 +107,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/impact'
     | '/login'
+    | '/ppt'
     | '/sessions'
   fileRoutesById: FileRoutesById
 }
@@ -94,6 +117,7 @@ export interface RootRouteChildren {
   ConnectRoute: typeof ConnectRoute
   ImpactRoute: typeof ImpactRoute
   LoginRoute: typeof LoginRoute
+  PptRoute: typeof PptRoute
   SessionsRoute: typeof SessionsRoute
 }
 
@@ -134,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ppt': {
+      id: '/ppt'
+      path: '/ppt'
+      fullPath: '/ppt'
+      preLoaderRoute: typeof PptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sessions': {
       id: '/sessions'
       path: '/sessions'
@@ -150,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectRoute: ConnectRoute,
   ImpactRoute: ImpactRoute,
   LoginRoute: LoginRoute,
+  PptRoute: PptRoute,
   SessionsRoute: SessionsRoute,
 }
 export const routeTree = rootRouteImport
