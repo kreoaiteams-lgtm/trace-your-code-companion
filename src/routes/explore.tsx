@@ -28,17 +28,18 @@ import {
   type GraphEdge,
 } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/explore")(
-  {
-    head: () => ({
-      meta: [
-        { title: "Graph Explorer — TraceAI" },
-        { name: "description", content: "Visualize your codebase's dependency graph powered by Entire Graph." },
-      ],
-    }),
-    component: GraphExplorer,
-  },
-);
+export const Route = createFileRoute("/explore")({
+  head: () => ({
+    meta: [
+      { title: "Graph Explorer — TraceAI" },
+      {
+        name: "description",
+        content: "Visualize your codebase's dependency graph powered by Entire Graph.",
+      },
+    ],
+  }),
+  component: GraphExplorer,
+});
 
 // Simple force-directed layout
 function computeLayout(nodes: GraphNode[], edges: GraphEdge[], width: number, height: number) {
@@ -61,8 +62,12 @@ function computeLayout(nodes: GraphNode[], edges: GraphEdge[], width: number, he
     // Repulsion
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        const a = positions.get(nodes[i].id)!;
-        const b = positions.get(nodes[j].id)!;
+        const nodeA = nodes[i];
+        const nodeB = nodes[j];
+        if (!nodeA || !nodeB) continue;
+        const a = positions.get(nodeA.id);
+        const b = positions.get(nodeB.id);
+        if (!a || !b) continue;
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
@@ -133,7 +138,8 @@ function GraphExplorer() {
   });
 
   const filteredEdges = mockGraphData.edges.filter(
-    (e) => filteredNodes.some((n) => n.id === e.source) && filteredNodes.some((n) => n.id === e.target),
+    (e) =>
+      filteredNodes.some((n) => n.id === e.source) && filteredNodes.some((n) => n.id === e.target),
   );
 
   const positions = computeLayout(filteredNodes, filteredEdges, width, height);
@@ -187,7 +193,9 @@ function GraphExplorer() {
               onClick={() => setFilterType(type)}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all duration-200",
-                filterType === type ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-white/60",
+                filterType === type
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/60",
               )}
             >
               {type}
@@ -196,14 +204,34 @@ function GraphExplorer() {
         </div>
 
         <div className="flex items-center gap-1 ml-auto">
-          <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(z + 0.2, 3))} aria-label="Zoom in">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setZoom((z) => Math.min(z + 0.2, 3))}
+            aria-label="Zoom in"
+          >
             <ZoomIn className="size-4" />
           </Button>
-          <span className="text-xs text-muted-foreground min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
-          <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(z - 0.2, 0.3))} aria-label="Zoom out">
+          <span className="text-xs text-muted-foreground min-w-[3rem] text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setZoom((z) => Math.max(z - 0.2, 0.3))}
+            aria-label="Zoom out"
+          >
             <ZoomOut className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="Reset view">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setZoom(1);
+              setPan({ x: 0, y: 0 });
+            }}
+            aria-label="Reset view"
+          >
             <Maximize2 className="size-4" />
           </Button>
         </div>
@@ -211,14 +239,22 @@ function GraphExplorer() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Graph Canvas */}
-        <div className="relative flex-1 overflow-hidden" style={{
-          background: "radial-gradient(ellipse 120% 80% at 50% 40%, oklch(0.96 0.02 245 / 30%), oklch(0.97 0.02 160 / 20%), transparent 70%), oklch(0.993 0.003 85)",
-        }}>
+        <div
+          className="relative flex-1 overflow-hidden"
+          style={{
+            background:
+              "radial-gradient(ellipse 120% 80% at 50% 40%, oklch(0.96 0.02 245 / 30%), oklch(0.97 0.02 160 / 20%), transparent 70%), oklch(0.993 0.003 85)",
+          }}
+        >
           {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: "radial-gradient(circle, oklch(0.70 0.02 260 / 40%) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }} />
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, oklch(0.70 0.02 260 / 40%) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
+          />
 
           <svg
             ref={svgRef}
@@ -232,7 +268,14 @@ function GraphExplorer() {
             onMouseLeave={handleMouseUp}
           >
             <defs>
-              <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <marker
+                id="arrowhead"
+                markerWidth="8"
+                markerHeight="6"
+                refX="8"
+                refY="3"
+                orient="auto"
+              >
                 <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" opacity="0.6" />
               </marker>
               <filter id="glow">
@@ -253,7 +296,8 @@ function GraphExplorer() {
                 const from = positions.get(edge.source);
                 const to = positions.get(edge.target);
                 if (!from || !to) return null;
-                const isHighlighted = activeNodeId && (edge.source === activeNodeId || edge.target === activeNodeId);
+                const isHighlighted =
+                  activeNodeId && (edge.source === activeNodeId || edge.target === activeNodeId);
                 const isDimmed = activeNodeId && !isHighlighted;
 
                 return (
@@ -263,10 +307,16 @@ function GraphExplorer() {
                     y1={from.y}
                     x2={to.x}
                     y2={to.y}
-                    stroke={isHighlighted ? getRiskColor(
-                      (mockGraphData.nodes.find((n) => n.id === edge.source)?.riskScore ?? 0 +
-                      (mockGraphData.nodes.find((n) => n.id === edge.target)?.riskScore ?? 0)) / 2,
-                    ) : "#cbd5e1"}
+                    stroke={
+                      isHighlighted
+                        ? getRiskColor(
+                            (mockGraphData.nodes.find((n) => n.id === edge.source)?.riskScore ??
+                              0 +
+                                (mockGraphData.nodes.find((n) => n.id === edge.target)?.riskScore ??
+                                  0)) / 2,
+                          )
+                        : "#cbd5e1"
+                    }
                     strokeWidth={isHighlighted ? 2.5 : 1}
                     strokeDasharray={edge.type === "call" ? "6,3" : undefined}
                     opacity={isDimmed ? 0.1 : isHighlighted ? 1 : 0.4}
@@ -290,7 +340,10 @@ function GraphExplorer() {
                   <g
                     key={node.id}
                     transform={`translate(${pos.x}, ${pos.y})`}
-                    onClick={(e) => { e.stopPropagation(); setSelectedNode(isSelected ? null : node); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedNode(isSelected ? null : node);
+                    }}
                     onMouseEnter={() => setHoveredNode(node.id)}
                     onMouseLeave={() => setHoveredNode(null)}
                     className="cursor-pointer"
@@ -298,9 +351,25 @@ function GraphExplorer() {
                   >
                     {/* Glow ring for high risk */}
                     {node.riskScore >= 60 && (
-                      <circle r={nodeSize + 6} fill="none" stroke={getRiskColor(node.riskScore)} strokeWidth="2" opacity="0.3">
-                        <animate attributeName="r" values={`${nodeSize + 4};${nodeSize + 10};${nodeSize + 4}`} dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite" />
+                      <circle
+                        r={nodeSize + 6}
+                        fill="none"
+                        stroke={getRiskColor(node.riskScore)}
+                        strokeWidth="2"
+                        opacity="0.3"
+                      >
+                        <animate
+                          attributeName="r"
+                          values={`${nodeSize + 4};${nodeSize + 10};${nodeSize + 4}`}
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values="0.3;0.1;0.3"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
                       </circle>
                     )}
 
@@ -339,8 +408,20 @@ function GraphExplorer() {
 
                     {/* Risk badge */}
                     <g transform={`translate(${nodeSize - 4}, ${-nodeSize + 4})`}>
-                      <rect x="-8" y="-8" width="16" height="16" rx="8" fill={getRiskColor(node.riskScore)} />
-                      <text textAnchor="middle" y="4" className="text-[8px] font-bold" style={{ fill: "white" }}>
+                      <rect
+                        x="-8"
+                        y="-8"
+                        width="16"
+                        height="16"
+                        rx="8"
+                        fill={getRiskColor(node.riskScore)}
+                      />
+                      <text
+                        textAnchor="middle"
+                        y="4"
+                        className="text-[8px] font-bold"
+                        style={{ fill: "white" }}
+                      >
                         {node.riskScore}
                       </text>
                     </g>
@@ -369,9 +450,20 @@ function GraphExplorer() {
           {/* Stats overlay */}
           <div className="glass absolute top-4 left-4 rounded-xl p-3 text-xs">
             <div className="flex items-center gap-4">
-              <div><span className="font-semibold text-foreground">{filteredNodes.length}</span> <span className="text-muted-foreground">nodes</span></div>
-              <div><span className="font-semibold text-foreground">{filteredEdges.length}</span> <span className="text-muted-foreground">edges</span></div>
-              <div><span className="font-semibold text-foreground">{mockGraphData.metadata.avgComplexity.toFixed(1)}</span> <span className="text-muted-foreground">avg complexity</span></div>
+              <div>
+                <span className="font-semibold text-foreground">{filteredNodes.length}</span>{" "}
+                <span className="text-muted-foreground">nodes</span>
+              </div>
+              <div>
+                <span className="font-semibold text-foreground">{filteredEdges.length}</span>{" "}
+                <span className="text-muted-foreground">edges</span>
+              </div>
+              <div>
+                <span className="font-semibold text-foreground">
+                  {mockGraphData.metadata.avgComplexity.toFixed(1)}
+                </span>{" "}
+                <span className="text-muted-foreground">avg complexity</span>
+              </div>
             </div>
           </div>
         </div>
@@ -391,7 +483,9 @@ function GraphExplorer() {
                 {/* Risk Score */}
                 <div className="glass rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium uppercase text-muted-foreground">Risk Score</span>
+                    <span className="text-xs font-medium uppercase text-muted-foreground">
+                      Risk Score
+                    </span>
                     <span
                       className="rounded-full px-2 py-0.5 text-xs font-semibold text-white"
                       style={{ backgroundColor: getRiskColor(selectedNode.riskScore) }}
@@ -399,7 +493,10 @@ function GraphExplorer() {
                       {getRiskLabel(selectedNode.riskScore)}
                     </span>
                   </div>
-                  <div className="text-3xl font-bold" style={{ color: getRiskColor(selectedNode.riskScore) }}>
+                  <div
+                    className="text-3xl font-bold"
+                    style={{ color: getRiskColor(selectedNode.riskScore) }}
+                  >
                     {selectedNode.riskScore}
                   </div>
                   <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
@@ -439,7 +536,8 @@ function GraphExplorer() {
                 {/* Dependencies */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
-                    <ChevronRight className="size-3" /> Dependencies ({getNodeDependencies(selectedNode.id).length})
+                    <ChevronRight className="size-3" /> Dependencies (
+                    {getNodeDependencies(selectedNode.id).length})
                   </h4>
                   <div className="space-y-1">
                     {getNodeDependencies(selectedNode.id).map((dep) => (
@@ -448,7 +546,10 @@ function GraphExplorer() {
                         onClick={() => setSelectedNode(dep)}
                         className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted transition-colors text-left"
                       >
-                        <span className="size-2 rounded-full" style={{ backgroundColor: getRiskColor(dep.riskScore) }} />
+                        <span
+                          className="size-2 rounded-full"
+                          style={{ backgroundColor: getRiskColor(dep.riskScore) }}
+                        />
                         <span className="truncate">{dep.label}</span>
                         <span className="ml-auto text-muted-foreground">{dep.riskScore}</span>
                       </button>
@@ -459,7 +560,8 @@ function GraphExplorer() {
                 {/* Dependents */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
-                    <ChevronRight className="size-3" /> Dependents ({getNodeDependents(selectedNode.id).length})
+                    <ChevronRight className="size-3" /> Dependents (
+                    {getNodeDependents(selectedNode.id).length})
                   </h4>
                   <div className="space-y-1">
                     {getNodeDependents(selectedNode.id).map((dep) => (
@@ -468,7 +570,10 @@ function GraphExplorer() {
                         onClick={() => setSelectedNode(dep)}
                         className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted transition-colors text-left"
                       >
-                        <span className="size-2 rounded-full" style={{ backgroundColor: getRiskColor(dep.riskScore) }} />
+                        <span
+                          className="size-2 rounded-full"
+                          style={{ backgroundColor: getRiskColor(dep.riskScore) }}
+                        />
                         <span className="truncate">{dep.label}</span>
                         <span className="ml-auto text-muted-foreground">{dep.riskScore}</span>
                       </button>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Archive,
   BookOpen,
@@ -27,22 +27,36 @@ import {
   type TraceSession,
   type SessionFinding,
 } from "@/lib/mock-data";
+import { readTraceSessions, updateTraceSession } from "@/lib/trace-store";
 
 export const Route = createFileRoute("/sessions")({
   head: () => ({
     meta: [
       { title: "Session Manager — TraceAI" },
-      { name: "description", content: "Manage your code exploration sessions powered by Entire Checkpoints." },
+      {
+        name: "description",
+        content: "Manage your code exploration sessions powered by Entire Checkpoints.",
+      },
     ],
   }),
   component: SessionManager,
 });
 
-const statusConfig: Record<string, { icon: typeof Play; label: string; color: string; bg: string }> = {
+const statusConfig: Record<
+  string,
+  { icon: typeof Play; label: string; color: string; bg: string }
+> = {
   active: { icon: Play, label: "Active", color: "text-emerald-600", bg: "bg-emerald-100" },
   paused: { icon: Pause, label: "Paused", color: "text-amber-600", bg: "bg-amber-100" },
   completed: { icon: CheckCircle2, label: "Completed", color: "text-blue-600", bg: "bg-blue-100" },
   shared: { icon: Share2, label: "Shared", color: "text-purple-600", bg: "bg-purple-100" },
+};
+
+const fallbackStatus = {
+  icon: Play,
+  label: "Active",
+  color: "text-emerald-600",
+  bg: "bg-emerald-100",
 };
 
 function FindingCard({ finding }: { finding: SessionFinding }) {
@@ -73,7 +87,9 @@ function FindingCard({ finding }: { finding: SessionFinding }) {
               {finding.severity}
             </span>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{finding.description}</p>
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+            {finding.description}
+          </p>
           {finding.affectedFiles.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {finding.affectedFiles.map((file) => (
@@ -91,14 +107,58 @@ function FindingCard({ finding }: { finding: SessionFinding }) {
 
 function SessionManager() {
   const [selectedSession, setSelectedSession] = useState<TraceSession | null>(null);
+  const [sessions, setSessions] = useState<TraceSession[]>(() => readTraceSessions());
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredSessions = mockSessions.filter((s) => {
+  useEffect(() => {
+    const refresh = () => setSessions(readTraceSessions());
+    window.addEventListener("traceai:sessions-updated", refresh);
+    return () => window.removeEventListener("traceai:sessions-updated", refresh);
+  }, []);
+
+  const filteredSessions = sessions.filter((s) => {
     if (filterStatus !== "all" && s.status !== filterStatus) return false;
     if (searchQuery && !s.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  const createNewTrace = () => {
+    const title = window.prompt("Name this trace session", "New codebase investigation");
+    if (!title?.trim()) return;
+    const session: TraceSession = {
+      id: `trace-${Date.now()}`,
+      title: title.trim(),
+      description: "New trace session ready for investigation.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      author: "You",
+      authorAvatar: "YO",
+      status: "active",
+      filesExplored: [],
+      questionsAsked: [],
+      findings: [],
+      checkpointId: `ckpt-local-${Date.now().toString(36)}`,
+      tags: ["trace"],
+    };
+    const next = [session, ...readTraceSessions()];
+    window.localStorage.setItem("traceai.sessions.v1", JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("traceai:sessions-updated"));
+    setSelectedSession(session);
+  };
+
+  const shareSession = async () => {
+    if (!selectedSession) return;
+    const shareText = `TraceAI checkpoint ${selectedSession.checkpointId}: ${selectedSession.title}`;
+    if (navigator.clipboard) await navigator.clipboard.writeText(shareText);
+    window.alert("Checkpoint reference copied to your clipboard.");
+  };
+
+  const resumeSession = () => {
+    if (!selectedSession) return;
+    const updated = updateTraceSession(selectedSession.id, { status: "active" });
+    if (updated) setSelectedSession(updated);
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -119,7 +179,7 @@ function SessionManager() {
         <div className="p-4 border-b border-border space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-lg font-medium">Trace Sessions</h2>
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={createNewTrace}>
               <Sparkles className="size-3.5" />
               New Trace
             </Button>
@@ -143,7 +203,9 @@ function SessionManager() {
                 onClick={() => setFilterStatus(status)}
                 className={cn(
                   "flex-1 rounded px-2 py-1.5 text-xs font-medium capitalize transition-colors",
-                  filterStatus === status ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  filterStatus === status
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {status}
@@ -154,7 +216,7 @@ function SessionManager() {
 
         <div className="flex-1 overflow-y-auto">
           {filteredSessions.map((session) => {
-            const status = statusConfig[session.status];
+            const status = statusConfig[session.status] ?? fallbackStatus;
             const StatusIcon = status.icon;
 
             return (
@@ -175,9 +237,16 @@ function SessionManager() {
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium truncate">{session.title}</h3>
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{session.description}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                    {session.description}
+                  </p>
                   <div className="mt-2 flex items-center gap-3">
-                    <span className={cn("flex items-center gap-1 text-[11px] font-medium", status.color)}>
+                    <span
+                      className={cn(
+                        "flex items-center gap-1 text-[11px] font-medium",
+                        status.color,
+                      )}
+                    >
                       <StatusIcon className="size-3" />
                       {status.label}
                     </span>
@@ -207,7 +276,9 @@ function SessionManager() {
               </div>
               <h3 className="font-serif text-2xl font-medium">Session Manager</h3>
               <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                Each trace session captures your exploration path — files visited, questions asked, and findings discovered. Sessions are backed by Entire Checkpoints for seamless handoff.
+                Each trace session captures your exploration path — files visited, questions asked,
+                and findings discovered. Sessions are backed by Entire Checkpoints for seamless
+                handoff.
               </p>
             </div>
           </div>
@@ -218,28 +289,37 @@ function SessionManager() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   {(() => {
-                    const status = statusConfig[selectedSession.status];
+                    const status = statusConfig[selectedSession.status] ?? fallbackStatus;
                     const StatusIcon = status.icon;
                     return (
-                      <span className={cn("flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", status.bg, status.color)}>
+                      <span
+                        className={cn(
+                          "flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                          status.bg,
+                          status.color,
+                        )}
+                      >
                         <StatusIcon className="size-3" />
                         {status.label}
                       </span>
                     );
                   })()}
                   <span className="text-xs text-muted-foreground">
-                    Checkpoint: <code className="bg-muted px-1.5 py-0.5 rounded">{selectedSession.checkpointId}</code>
+                    Checkpoint:{" "}
+                    <code className="bg-muted px-1.5 py-0.5 rounded">
+                      {selectedSession.checkpointId}
+                    </code>
                   </span>
                 </div>
                 <h2 className="font-serif text-2xl font-medium">{selectedSession.title}</h2>
                 <p className="mt-1 text-muted-foreground">{selectedSession.description}</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={shareSession}>
                   <Share2 className="size-4" />
                   Share
                 </Button>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={resumeSession}>
                   <Play className="size-4" />
                   Resume
                 </Button>
@@ -282,7 +362,10 @@ function SessionManager() {
             <div className="flex items-center gap-2 mb-6">
               <Tag className="size-4 text-muted-foreground" />
               {selectedSession.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                <span
+                  key={tag}
+                  className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                >
                   {tag}
                 </span>
               ))}
@@ -296,8 +379,13 @@ function SessionManager() {
               </h3>
               <div className="space-y-1">
                 {selectedSession.filesExplored.map((file, i) => (
-                  <div key={file} className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/50 transition-colors">
-                    <span className="flex size-6 items-center justify-center rounded text-xs font-medium bg-muted text-muted-foreground">{i + 1}</span>
+                  <div
+                    key={file}
+                    className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/50 transition-colors"
+                  >
+                    <span className="flex size-6 items-center justify-center rounded text-xs font-medium bg-muted text-muted-foreground">
+                      {i + 1}
+                    </span>
                     <code className="text-sm font-mono">{file}</code>
                     <ChevronRight className="size-3 ml-auto text-muted-foreground" />
                   </div>

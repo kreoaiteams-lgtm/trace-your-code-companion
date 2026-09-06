@@ -142,26 +142,266 @@ export interface LanguageEntry {
 
 export const mockGraphData: GraphData = {
   nodes: [
-    { id: "app", label: "App.tsx", type: "component", language: "TypeScript", path: "src/App.tsx", complexity: 3, changeFrequency: 12, linesOfCode: 145, riskScore: 35, dependencyCount: 8, dependentCount: 1 },
-    { id: "router", label: "router.tsx", type: "module", language: "TypeScript", path: "src/router.tsx", complexity: 2, changeFrequency: 4, linesOfCode: 52, riskScore: 20, dependencyCount: 3, dependentCount: 5 },
-    { id: "auth-service", label: "auth.service.ts", type: "module", language: "TypeScript", path: "src/services/auth.service.ts", complexity: 7, changeFrequency: 18, linesOfCode: 312, riskScore: 78, dependencyCount: 5, dependentCount: 12 },
-    { id: "api-client", label: "api-client.ts", type: "module", language: "TypeScript", path: "src/lib/api-client.ts", complexity: 6, changeFrequency: 15, linesOfCode: 289, riskScore: 65, dependencyCount: 3, dependentCount: 18 },
-    { id: "user-store", label: "user.store.ts", type: "module", language: "TypeScript", path: "src/stores/user.store.ts", complexity: 5, changeFrequency: 9, linesOfCode: 178, riskScore: 52, dependencyCount: 4, dependentCount: 8 },
-    { id: "dashboard", label: "Dashboard.tsx", type: "component", language: "TypeScript", path: "src/pages/Dashboard.tsx", complexity: 4, changeFrequency: 11, linesOfCode: 234, riskScore: 40, dependencyCount: 7, dependentCount: 2 },
-    { id: "profile", label: "Profile.tsx", type: "component", language: "TypeScript", path: "src/pages/Profile.tsx", complexity: 3, changeFrequency: 6, linesOfCode: 156, riskScore: 25, dependencyCount: 5, dependentCount: 1 },
-    { id: "settings", label: "Settings.tsx", type: "component", language: "TypeScript", path: "src/pages/Settings.tsx", complexity: 4, changeFrequency: 7, linesOfCode: 198, riskScore: 30, dependencyCount: 6, dependentCount: 1 },
-    { id: "button", label: "Button.tsx", type: "component", language: "TypeScript", path: "src/components/ui/Button.tsx", complexity: 2, changeFrequency: 3, linesOfCode: 67, riskScore: 15, dependencyCount: 1, dependentCount: 22 },
-    { id: "modal", label: "Modal.tsx", type: "component", language: "TypeScript", path: "src/components/ui/Modal.tsx", complexity: 4, changeFrequency: 5, linesOfCode: 134, riskScore: 28, dependencyCount: 2, dependentCount: 14 },
-    { id: "form-utils", label: "form.utils.ts", type: "module", language: "TypeScript", path: "src/lib/form.utils.ts", complexity: 3, changeFrequency: 4, linesOfCode: 89, riskScore: 18, dependencyCount: 1, dependentCount: 9 },
-    { id: "db-client", label: "db.client.ts", type: "module", language: "TypeScript", path: "src/lib/db.client.ts", complexity: 8, changeFrequency: 20, linesOfCode: 345, riskScore: 85, dependencyCount: 2, dependentCount: 15 },
-    { id: "middleware", label: "middleware.ts", type: "module", language: "TypeScript", path: "src/middleware.ts", complexity: 6, changeFrequency: 8, linesOfCode: 167, riskScore: 55, dependencyCount: 4, dependentCount: 6 },
-    { id: "types", label: "types.ts", type: "module", language: "TypeScript", path: "src/types/index.ts", complexity: 1, changeFrequency: 10, linesOfCode: 234, riskScore: 12, dependencyCount: 0, dependentCount: 25 },
-    { id: "utils", label: "utils.ts", type: "module", language: "TypeScript", path: "src/lib/utils.ts", complexity: 2, changeFrequency: 6, linesOfCode: 123, riskScore: 10, dependencyCount: 1, dependentCount: 20 },
-    { id: "hooks", label: "useAuth.ts", type: "function", language: "TypeScript", path: "src/hooks/useAuth.ts", complexity: 5, changeFrequency: 7, linesOfCode: 98, riskScore: 45, dependencyCount: 3, dependentCount: 10 },
-    { id: "cache", label: "cache.ts", type: "module", language: "TypeScript", path: "src/lib/cache.ts", complexity: 6, changeFrequency: 5, linesOfCode: 156, riskScore: 42, dependencyCount: 2, dependentCount: 8 },
-    { id: "logger", label: "logger.ts", type: "module", language: "TypeScript", path: "src/lib/logger.ts", complexity: 3, changeFrequency: 2, linesOfCode: 78, riskScore: 8, dependencyCount: 0, dependentCount: 30 },
-    { id: "config", label: "config.ts", type: "module", language: "TypeScript", path: "src/config.ts", complexity: 1, changeFrequency: 3, linesOfCode: 45, riskScore: 5, dependencyCount: 0, dependentCount: 18 },
-    { id: "error-handler", label: "errorHandler.ts", type: "module", language: "TypeScript", path: "src/lib/errorHandler.ts", complexity: 4, changeFrequency: 6, linesOfCode: 112, riskScore: 38, dependencyCount: 2, dependentCount: 12 },
+    {
+      id: "app",
+      label: "App.tsx",
+      type: "component",
+      language: "TypeScript",
+      path: "src/App.tsx",
+      complexity: 3,
+      changeFrequency: 12,
+      linesOfCode: 145,
+      riskScore: 35,
+      dependencyCount: 8,
+      dependentCount: 1,
+    },
+    {
+      id: "router",
+      label: "router.tsx",
+      type: "module",
+      language: "TypeScript",
+      path: "src/router.tsx",
+      complexity: 2,
+      changeFrequency: 4,
+      linesOfCode: 52,
+      riskScore: 20,
+      dependencyCount: 3,
+      dependentCount: 5,
+    },
+    {
+      id: "auth-service",
+      label: "auth.service.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/services/auth.service.ts",
+      complexity: 7,
+      changeFrequency: 18,
+      linesOfCode: 312,
+      riskScore: 78,
+      dependencyCount: 5,
+      dependentCount: 12,
+    },
+    {
+      id: "api-client",
+      label: "api-client.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/api-client.ts",
+      complexity: 6,
+      changeFrequency: 15,
+      linesOfCode: 289,
+      riskScore: 65,
+      dependencyCount: 3,
+      dependentCount: 18,
+    },
+    {
+      id: "user-store",
+      label: "user.store.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/stores/user.store.ts",
+      complexity: 5,
+      changeFrequency: 9,
+      linesOfCode: 178,
+      riskScore: 52,
+      dependencyCount: 4,
+      dependentCount: 8,
+    },
+    {
+      id: "dashboard",
+      label: "Dashboard.tsx",
+      type: "component",
+      language: "TypeScript",
+      path: "src/pages/Dashboard.tsx",
+      complexity: 4,
+      changeFrequency: 11,
+      linesOfCode: 234,
+      riskScore: 40,
+      dependencyCount: 7,
+      dependentCount: 2,
+    },
+    {
+      id: "profile",
+      label: "Profile.tsx",
+      type: "component",
+      language: "TypeScript",
+      path: "src/pages/Profile.tsx",
+      complexity: 3,
+      changeFrequency: 6,
+      linesOfCode: 156,
+      riskScore: 25,
+      dependencyCount: 5,
+      dependentCount: 1,
+    },
+    {
+      id: "settings",
+      label: "Settings.tsx",
+      type: "component",
+      language: "TypeScript",
+      path: "src/pages/Settings.tsx",
+      complexity: 4,
+      changeFrequency: 7,
+      linesOfCode: 198,
+      riskScore: 30,
+      dependencyCount: 6,
+      dependentCount: 1,
+    },
+    {
+      id: "button",
+      label: "Button.tsx",
+      type: "component",
+      language: "TypeScript",
+      path: "src/components/ui/Button.tsx",
+      complexity: 2,
+      changeFrequency: 3,
+      linesOfCode: 67,
+      riskScore: 15,
+      dependencyCount: 1,
+      dependentCount: 22,
+    },
+    {
+      id: "modal",
+      label: "Modal.tsx",
+      type: "component",
+      language: "TypeScript",
+      path: "src/components/ui/Modal.tsx",
+      complexity: 4,
+      changeFrequency: 5,
+      linesOfCode: 134,
+      riskScore: 28,
+      dependencyCount: 2,
+      dependentCount: 14,
+    },
+    {
+      id: "form-utils",
+      label: "form.utils.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/form.utils.ts",
+      complexity: 3,
+      changeFrequency: 4,
+      linesOfCode: 89,
+      riskScore: 18,
+      dependencyCount: 1,
+      dependentCount: 9,
+    },
+    {
+      id: "db-client",
+      label: "db.client.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/db.client.ts",
+      complexity: 8,
+      changeFrequency: 20,
+      linesOfCode: 345,
+      riskScore: 85,
+      dependencyCount: 2,
+      dependentCount: 15,
+    },
+    {
+      id: "middleware",
+      label: "middleware.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/middleware.ts",
+      complexity: 6,
+      changeFrequency: 8,
+      linesOfCode: 167,
+      riskScore: 55,
+      dependencyCount: 4,
+      dependentCount: 6,
+    },
+    {
+      id: "types",
+      label: "types.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/types/index.ts",
+      complexity: 1,
+      changeFrequency: 10,
+      linesOfCode: 234,
+      riskScore: 12,
+      dependencyCount: 0,
+      dependentCount: 25,
+    },
+    {
+      id: "utils",
+      label: "utils.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/utils.ts",
+      complexity: 2,
+      changeFrequency: 6,
+      linesOfCode: 123,
+      riskScore: 10,
+      dependencyCount: 1,
+      dependentCount: 20,
+    },
+    {
+      id: "hooks",
+      label: "useAuth.ts",
+      type: "function",
+      language: "TypeScript",
+      path: "src/hooks/useAuth.ts",
+      complexity: 5,
+      changeFrequency: 7,
+      linesOfCode: 98,
+      riskScore: 45,
+      dependencyCount: 3,
+      dependentCount: 10,
+    },
+    {
+      id: "cache",
+      label: "cache.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/cache.ts",
+      complexity: 6,
+      changeFrequency: 5,
+      linesOfCode: 156,
+      riskScore: 42,
+      dependencyCount: 2,
+      dependentCount: 8,
+    },
+    {
+      id: "logger",
+      label: "logger.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/logger.ts",
+      complexity: 3,
+      changeFrequency: 2,
+      linesOfCode: 78,
+      riskScore: 8,
+      dependencyCount: 0,
+      dependentCount: 30,
+    },
+    {
+      id: "config",
+      label: "config.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/config.ts",
+      complexity: 1,
+      changeFrequency: 3,
+      linesOfCode: 45,
+      riskScore: 5,
+      dependencyCount: 0,
+      dependentCount: 18,
+    },
+    {
+      id: "error-handler",
+      label: "errorHandler.ts",
+      type: "module",
+      language: "TypeScript",
+      path: "src/lib/errorHandler.ts",
+      complexity: 4,
+      changeFrequency: 6,
+      linesOfCode: 112,
+      riskScore: 38,
+      dependencyCount: 2,
+      dependentCount: 12,
+    },
   ],
   edges: [
     { source: "app", target: "router", type: "import", weight: 0.9 },
@@ -214,21 +454,42 @@ export const mockSessions: TraceSession[] = [
   {
     id: "trace-001",
     title: "Auth flow refactoring investigation",
-    description: "Traced the authentication pipeline from login → token refresh → session management. Identified circular dependency between auth.service and cache module.",
+    description:
+      "Traced the authentication pipeline from login → token refresh → session management. Identified circular dependency between auth.service and cache module.",
     createdAt: "2026-09-06T08:30:00Z",
     updatedAt: "2026-09-06T09:15:00Z",
     author: "Dhruv Gautam",
     authorAvatar: "DG",
     status: "active",
-    filesExplored: ["src/services/auth.service.ts", "src/lib/cache.ts", "src/hooks/useAuth.ts", "src/middleware.ts", "src/lib/api-client.ts"],
+    filesExplored: [
+      "src/services/auth.service.ts",
+      "src/lib/cache.ts",
+      "src/hooks/useAuth.ts",
+      "src/middleware.ts",
+      "src/lib/api-client.ts",
+    ],
     questionsAsked: [
       "What happens if the token refresh fails mid-request?",
       "Is the cache invalidation synchronous or async?",
       "Which components depend on useAuth?",
     ],
     findings: [
-      { type: "risk", title: "Circular dependency detected", description: "auth.service.ts imports cache.ts which imports config.ts that's also used by auth.service.ts through api-client.ts", affectedFiles: ["src/services/auth.service.ts", "src/lib/cache.ts"], severity: "high" },
-      { type: "suggestion", title: "Extract token manager", description: "Token refresh logic should be separated from auth.service into its own module to reduce complexity", affectedFiles: ["src/services/auth.service.ts"], severity: "medium" },
+      {
+        type: "risk",
+        title: "Circular dependency detected",
+        description:
+          "auth.service.ts imports cache.ts which imports config.ts that's also used by auth.service.ts through api-client.ts",
+        affectedFiles: ["src/services/auth.service.ts", "src/lib/cache.ts"],
+        severity: "high",
+      },
+      {
+        type: "suggestion",
+        title: "Extract token manager",
+        description:
+          "Token refresh logic should be separated from auth.service into its own module to reduce complexity",
+        affectedFiles: ["src/services/auth.service.ts"],
+        severity: "medium",
+      },
     ],
     checkpointId: "ckpt-abc123",
     tags: ["auth", "refactoring", "security"],
@@ -236,21 +497,41 @@ export const mockSessions: TraceSession[] = [
   {
     id: "trace-002",
     title: "Database connection pooling review",
-    description: "Analyzed db.client.ts for connection pool exhaustion issues reported in production. Found that error handler doesn't properly release connections.",
+    description:
+      "Analyzed db.client.ts for connection pool exhaustion issues reported in production. Found that error handler doesn't properly release connections.",
     createdAt: "2026-09-05T14:00:00Z",
     updatedAt: "2026-09-05T16:30:00Z",
     author: "Maya Rodriguez",
     authorAvatar: "MR",
     status: "completed",
-    filesExplored: ["src/lib/db.client.ts", "src/lib/errorHandler.ts", "src/config.ts", "src/lib/logger.ts"],
+    filesExplored: [
+      "src/lib/db.client.ts",
+      "src/lib/errorHandler.ts",
+      "src/config.ts",
+      "src/lib/logger.ts",
+    ],
     questionsAsked: [
       "What's the max pool size configuration?",
       "Are connections released on error?",
       "Can we add connection health checks?",
     ],
     findings: [
-      { type: "warning", title: "Connection leak on error", description: "errorHandler.ts catches database errors but doesn't call connection.release(), leading to pool exhaustion under load", affectedFiles: ["src/lib/errorHandler.ts", "src/lib/db.client.ts"], severity: "critical" },
-      { type: "insight", title: "Pool size too small", description: "Config sets max pool to 5 connections but the app has 15+ concurrent query paths", affectedFiles: ["src/config.ts"], severity: "high" },
+      {
+        type: "warning",
+        title: "Connection leak on error",
+        description:
+          "errorHandler.ts catches database errors but doesn't call connection.release(), leading to pool exhaustion under load",
+        affectedFiles: ["src/lib/errorHandler.ts", "src/lib/db.client.ts"],
+        severity: "critical",
+      },
+      {
+        type: "insight",
+        title: "Pool size too small",
+        description:
+          "Config sets max pool to 5 connections but the app has 15+ concurrent query paths",
+        affectedFiles: ["src/config.ts"],
+        severity: "high",
+      },
     ],
     checkpointId: "ckpt-def456",
     tags: ["database", "performance", "production-bug"],
@@ -258,20 +539,39 @@ export const mockSessions: TraceSession[] = [
   {
     id: "trace-003",
     title: "Component library audit",
-    description: "Reviewed all UI components for consistency, accessibility, and bundle size impact. Several components import the entire icon library.",
+    description:
+      "Reviewed all UI components for consistency, accessibility, and bundle size impact. Several components import the entire icon library.",
     createdAt: "2026-09-04T10:00:00Z",
     updatedAt: "2026-09-04T12:00:00Z",
     author: "Jake Lin",
     authorAvatar: "JL",
     status: "shared",
-    filesExplored: ["src/components/ui/Button.tsx", "src/components/ui/Modal.tsx", "src/lib/form.utils.ts"],
+    filesExplored: [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/lib/form.utils.ts",
+    ],
     questionsAsked: [
       "Which components are most used across the app?",
       "Are there duplicate utility functions?",
     ],
     findings: [
-      { type: "insight", title: "Button used in 22 files", description: "Button.tsx is the most widely used component — any breaking change has massive blast radius", affectedFiles: ["src/components/ui/Button.tsx"], severity: "medium" },
-      { type: "suggestion", title: "Tree-shake icon imports", description: "Modal.tsx imports all icons instead of individual ones, adding ~45KB to the bundle", affectedFiles: ["src/components/ui/Modal.tsx"], severity: "low" },
+      {
+        type: "insight",
+        title: "Button used in 22 files",
+        description:
+          "Button.tsx is the most widely used component — any breaking change has massive blast radius",
+        affectedFiles: ["src/components/ui/Button.tsx"],
+        severity: "medium",
+      },
+      {
+        type: "suggestion",
+        title: "Tree-shake icon imports",
+        description:
+          "Modal.tsx imports all icons instead of individual ones, adding ~45KB to the bundle",
+        affectedFiles: ["src/components/ui/Modal.tsx"],
+        severity: "low",
+      },
     ],
     checkpointId: "ckpt-ghi789",
     tags: ["ui", "performance", "audit"],
@@ -279,20 +579,33 @@ export const mockSessions: TraceSession[] = [
   {
     id: "trace-004",
     title: "API rate limiting investigation",
-    description: "Explored how API requests are throttled and whether the current implementation handles 429 responses correctly.",
+    description:
+      "Explored how API requests are throttled and whether the current implementation handles 429 responses correctly.",
     createdAt: "2026-09-03T09:00:00Z",
     updatedAt: "2026-09-03T10:45:00Z",
     author: "Sam Kim",
     authorAvatar: "SK",
     status: "paused",
-    filesExplored: ["src/lib/api-client.ts", "src/middleware.ts", "src/lib/errorHandler.ts", "src/lib/cache.ts"],
+    filesExplored: [
+      "src/lib/api-client.ts",
+      "src/middleware.ts",
+      "src/lib/errorHandler.ts",
+      "src/lib/cache.ts",
+    ],
     questionsAsked: [
       "Do we retry on 429?",
       "Is there a request queue?",
       "What's the backoff strategy?",
     ],
     findings: [
-      { type: "risk", title: "No retry logic for rate limits", description: "api-client.ts does not handle 429 responses — requests simply fail and error propagates to the UI", affectedFiles: ["src/lib/api-client.ts"], severity: "high" },
+      {
+        type: "risk",
+        title: "No retry logic for rate limits",
+        description:
+          "api-client.ts does not handle 429 responses — requests simply fail and error propagates to the UI",
+        affectedFiles: ["src/lib/api-client.ts"],
+        severity: "high",
+      },
     ],
     checkpointId: "ckpt-jkl012",
     tags: ["api", "reliability", "rate-limiting"],
@@ -306,7 +619,17 @@ export const mockImpactReports: ImpactReport[] = [
     riskScore: 78,
     blastRadius: 12,
     directDependents: ["src/hooks/useAuth.ts", "src/middleware.ts", "src/lib/api-client.ts"],
-    transitiveDependents: ["src/pages/Dashboard.tsx", "src/pages/Profile.tsx", "src/pages/Settings.tsx", "src/App.tsx", "src/stores/user.store.ts", "src/components/ui/Modal.tsx", "src/lib/form.utils.ts", "src/lib/cache.ts", "src/lib/errorHandler.ts"],
+    transitiveDependents: [
+      "src/pages/Dashboard.tsx",
+      "src/pages/Profile.tsx",
+      "src/pages/Settings.tsx",
+      "src/App.tsx",
+      "src/stores/user.store.ts",
+      "src/components/ui/Modal.tsx",
+      "src/lib/form.utils.ts",
+      "src/lib/cache.ts",
+      "src/lib/errorHandler.ts",
+    ],
     affectedTests: ["auth.test.ts", "middleware.test.ts", "api-client.test.ts", "useAuth.test.ts"],
     suggestions: [
       "Add integration tests for the full token refresh → request retry flow",
@@ -321,7 +644,21 @@ export const mockImpactReports: ImpactReport[] = [
     riskScore: 85,
     blastRadius: 15,
     directDependents: ["src/services/auth.service.ts", "src/middleware.ts"],
-    transitiveDependents: ["src/hooks/useAuth.ts", "src/pages/Dashboard.tsx", "src/pages/Profile.tsx", "src/pages/Settings.tsx", "src/App.tsx", "src/stores/user.store.ts", "src/lib/api-client.ts", "src/lib/cache.ts", "src/lib/errorHandler.ts", "src/lib/form.utils.ts", "src/components/ui/Button.tsx", "src/components/ui/Modal.tsx", "src/router.tsx"],
+    transitiveDependents: [
+      "src/hooks/useAuth.ts",
+      "src/pages/Dashboard.tsx",
+      "src/pages/Profile.tsx",
+      "src/pages/Settings.tsx",
+      "src/App.tsx",
+      "src/stores/user.store.ts",
+      "src/lib/api-client.ts",
+      "src/lib/cache.ts",
+      "src/lib/errorHandler.ts",
+      "src/lib/form.utils.ts",
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Modal.tsx",
+      "src/router.tsx",
+    ],
     affectedTests: ["db.test.ts", "auth.test.ts", "middleware.test.ts"],
     suggestions: [
       "Implement connection pool health monitoring",
@@ -414,16 +751,12 @@ export function getNodeById(id: string): GraphNode | undefined {
 }
 
 export function getNodeDependencies(nodeId: string): GraphNode[] {
-  const targetIds = mockGraphData.edges
-    .filter((e) => e.source === nodeId)
-    .map((e) => e.target);
+  const targetIds = mockGraphData.edges.filter((e) => e.source === nodeId).map((e) => e.target);
   return mockGraphData.nodes.filter((n) => targetIds.includes(n.id));
 }
 
 export function getNodeDependents(nodeId: string): GraphNode[] {
-  const sourceIds = mockGraphData.edges
-    .filter((e) => e.target === nodeId)
-    .map((e) => e.source);
+  const sourceIds = mockGraphData.edges.filter((e) => e.target === nodeId).map((e) => e.source);
   return mockGraphData.nodes.filter((n) => sourceIds.includes(n.id));
 }
 
@@ -443,10 +776,15 @@ export function getRiskLabel(risk: number): string {
 
 export function getSeverityColor(severity: string): string {
   switch (severity) {
-    case "critical": return "#ef4444";
-    case "high": return "#f59e0b";
-    case "medium": return "#3b82f6";
-    case "low": return "#22c55e";
-    default: return "#6b7280";
+    case "critical":
+      return "#ef4444";
+    case "high":
+      return "#f59e0b";
+    case "medium":
+      return "#3b82f6";
+    case "low":
+      return "#22c55e";
+    default:
+      return "#6b7280";
   }
 }

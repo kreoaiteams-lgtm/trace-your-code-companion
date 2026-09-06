@@ -39,7 +39,11 @@ export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
       { title: "Analytics Dashboard — TraceAI" },
-      { name: "description", content: "Codebase analytics powered by Databricks — risk trends, complexity hotspots, and change patterns." },
+      {
+        name: "description",
+        content:
+          "Codebase analytics powered by Databricks — risk trends, complexity hotspots, and change patterns.",
+      },
     ],
   }),
   component: AnalyticsDashboard,
@@ -56,10 +60,14 @@ function AnalyticsDashboard() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Database className="size-4 text-muted-foreground" />
-              <span className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Powered by Databricks</span>
+              <span className="text-xs font-medium uppercase text-muted-foreground tracking-wider">
+                Powered by Databricks
+              </span>
             </div>
             <h1 className="font-serif text-3xl font-medium">Codebase Analytics</h1>
-            <p className="mt-1 text-muted-foreground">Real-time insights into codebase health, risk patterns, and developer activity.</p>
+            <p className="mt-1 text-muted-foreground">
+              Real-time insights into codebase health, risk patterns, and developer activity.
+            </p>
           </div>
           <div className="flex items-center gap-1 rounded-md border border-border bg-card p-0.5">
             {["7d", "30d", "90d"].map((range) => (
@@ -68,7 +76,9 @@ function AnalyticsDashboard() {
                 onClick={() => setTimeRange(range)}
                 className={cn(
                   "rounded px-3 py-1.5 text-xs font-medium transition-colors",
-                  timeRange === range ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  timeRange === range
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {range}
@@ -80,23 +90,63 @@ function AnalyticsDashboard() {
         {/* KPI Cards */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Avg Risk Score", value: "43.2", change: "+2.1%", trend: "up", icon: Flame, color: "#f59e0b" },
-            { label: "High-Risk Files", value: "7", change: "+16.7%", trend: "up", icon: Zap, color: "#ef4444" },
-            { label: "Weekly Commits", value: "45", change: "+18.4%", trend: "up", icon: GitCommit, color: "#22c55e" },
-            { label: "Code Complexity", value: "4.2", change: "-3.5%", trend: "down", icon: Layers, color: "#6366f1" },
+            {
+              label: "Avg Risk Score",
+              value: "43.2",
+              change: "+2.1%",
+              trend: "up",
+              icon: Flame,
+              color: "#f59e0b",
+            },
+            {
+              label: "High-Risk Files",
+              value: "7",
+              change: "+16.7%",
+              trend: "up",
+              icon: Zap,
+              color: "#ef4444",
+            },
+            {
+              label: "Weekly Commits",
+              value: "45",
+              change: "+18.4%",
+              trend: "up",
+              icon: GitCommit,
+              color: "#22c55e",
+            },
+            {
+              label: "Code Complexity",
+              value: "4.2",
+              change: "-3.5%",
+              trend: "down",
+              icon: Layers,
+              color: "#6366f1",
+            },
           ].map((kpi) => {
             const Icon = kpi.icon;
             return (
               <div key={kpi.label} className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium uppercase text-muted-foreground">{kpi.label}</span>
-                  <div className="flex size-8 items-center justify-center rounded-md" style={{ backgroundColor: kpi.color + "18" }}>
+                  <span className="text-xs font-medium uppercase text-muted-foreground">
+                    {kpi.label}
+                  </span>
+                  <div
+                    className="flex size-8 items-center justify-center rounded-md"
+                    style={{ backgroundColor: kpi.color + "18" }}
+                  >
                     <Icon className="size-4" style={{ color: kpi.color }} />
                   </div>
                 </div>
                 <p className="text-3xl font-bold">{kpi.value}</p>
-                <p className={cn("text-xs font-medium mt-1", kpi.trend === "up" ? "text-emerald-600" : "text-red-500")}>
-                  <TrendingUp className={cn("inline size-3 mr-1", kpi.trend === "down" && "rotate-180")} />
+                <p
+                  className={cn(
+                    "text-xs font-medium mt-1",
+                    kpi.trend === "up" ? "text-emerald-600" : "text-red-500",
+                  )}
+                >
+                  <TrendingUp
+                    className={cn("inline size-3 mr-1", kpi.trend === "down" && "rotate-180")}
+                  />
                   {kpi.change} from last period
                 </p>
               </div>
@@ -135,8 +185,22 @@ function AnalyticsDashboard() {
                     fontSize: "12px",
                   }}
                 />
-                <Area type="monotone" dataKey="avgRisk" stroke="#f59e0b" fill="url(#riskGradient)" strokeWidth={2} name="Avg Risk" />
-                <Area type="monotone" dataKey="highRiskFiles" stroke="#ef4444" fill="url(#highRiskGradient)" strokeWidth={2} name="High Risk Files" />
+                <Area
+                  type="monotone"
+                  dataKey="avgRisk"
+                  stroke="#f59e0b"
+                  fill="url(#riskGradient)"
+                  strokeWidth={2}
+                  name="Avg Risk"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="highRiskFiles"
+                  stroke="#ef4444"
+                  fill="url(#highRiskGradient)"
+                  strokeWidth={2}
+                  name="High Risk Files"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -162,7 +226,12 @@ function AnalyticsDashboard() {
                 />
                 <Legend wrapperStyle={{ fontSize: "11px" }} />
                 <Bar dataKey="commits" fill="#6366f1" radius={[4, 4, 0, 0]} name="Commits" />
-                <Bar dataKey="filesChanged" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Files Changed" />
+                <Bar
+                  dataKey="filesChanged"
+                  fill="#8b5cf6"
+                  radius={[4, 4, 0, 0]}
+                  name="Files Changed"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -179,8 +248,30 @@ function AnalyticsDashboard() {
             <ResponsiveContainer width="100%" height={280}>
               <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="complexity" name="Complexity" tick={{ fontSize: 11 }} stroke="#9ca3af" label={{ value: "Complexity", position: "insideBottom", offset: -5, fontSize: 11 }} />
-                <YAxis dataKey="changes" name="Changes" tick={{ fontSize: 11 }} stroke="#9ca3af" label={{ value: "Changes (30d)", angle: -90, position: "insideLeft", fontSize: 11 }} />
+                <XAxis
+                  dataKey="complexity"
+                  name="Complexity"
+                  tick={{ fontSize: 11 }}
+                  stroke="#9ca3af"
+                  label={{
+                    value: "Complexity",
+                    position: "insideBottom",
+                    offset: -5,
+                    fontSize: 11,
+                  }}
+                />
+                <YAxis
+                  dataKey="changes"
+                  name="Changes"
+                  tick={{ fontSize: 11 }}
+                  stroke="#9ca3af"
+                  label={{
+                    value: "Changes (30d)",
+                    angle: -90,
+                    position: "insideLeft",
+                    fontSize: 11,
+                  }}
+                />
                 <ZAxis dataKey="risk" range={[100, 800]} name="Risk" />
                 <Tooltip
                   contentStyle={{
@@ -191,7 +282,8 @@ function AnalyticsDashboard() {
                   }}
                   content={({ payload }) => {
                     if (!payload?.length) return null;
-                    const data = payload[0].payload;
+                    const data = payload[0]?.payload;
+                    if (!data) return null;
                     return (
                       <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
                         <p className="font-medium text-sm">{data.file}</p>
@@ -199,7 +291,10 @@ function AnalyticsDashboard() {
                           <span>Complexity: {data.complexity}</span>
                           <span>Changes: {data.changes}</span>
                           <span>Bugs: {data.bugs}</span>
-                          <span className="font-semibold" style={{ color: getRiskColor(data.risk) }}>
+                          <span
+                            className="font-semibold"
+                            style={{ color: getRiskColor(data.risk) }}
+                          >
                             Risk: {data.risk}
                           </span>
                         </div>
@@ -218,8 +313,14 @@ function AnalyticsDashboard() {
             {/* Hotspot legend */}
             <div className="mt-4 grid grid-cols-2 gap-2">
               {mockAnalytics.complexityHotspots.slice(0, 4).map((h) => (
-                <div key={h.file} className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs">
-                  <span className="size-2 rounded-full" style={{ backgroundColor: getRiskColor(h.risk) }} />
+                <div
+                  key={h.file}
+                  className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs"
+                >
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: getRiskColor(h.risk) }}
+                  />
                   <span className="font-mono font-medium">{h.file}</span>
                   <span className="ml-auto text-muted-foreground">Risk: {h.risk}</span>
                 </div>
@@ -279,22 +380,35 @@ function AnalyticsDashboard() {
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-serif text-lg font-medium">Module Coupling Analysis</h3>
-            <span className="text-xs text-muted-foreground">Higher scores indicate tighter coupling</span>
+            <span className="text-xs text-muted-foreground">
+              Higher scores indicate tighter coupling
+            </span>
           </div>
           <div className="overflow-hidden rounded-lg border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Module A</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Module B</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Coupling Score</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Shared Deps</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    Module A
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    Module B
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    Coupling Score
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    Shared Deps
+                  </th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Health</th>
                 </tr>
               </thead>
               <tbody>
                 {mockAnalytics.moduleCoupling.map((coupling, i) => (
-                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={i}
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                  >
                     <td className="px-4 py-3 font-mono text-xs">{coupling.moduleA}</td>
                     <td className="px-4 py-3 font-mono text-xs">{coupling.moduleB}</td>
                     <td className="px-4 py-3">
@@ -308,7 +422,10 @@ function AnalyticsDashboard() {
                             }}
                           />
                         </div>
-                        <span className="text-xs font-medium" style={{ color: getRiskColor(coupling.couplingScore) }}>
+                        <span
+                          className="text-xs font-medium"
+                          style={{ color: getRiskColor(coupling.couplingScore) }}
+                        >
                           {coupling.couplingScore}%
                         </span>
                       </div>
@@ -319,7 +436,11 @@ function AnalyticsDashboard() {
                         className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
                         style={{ backgroundColor: getRiskColor(coupling.couplingScore) }}
                       >
-                        {coupling.couplingScore >= 85 ? "Tight" : coupling.couplingScore >= 70 ? "Moderate" : "Loose"}
+                        {coupling.couplingScore >= 85
+                          ? "Tight"
+                          : coupling.couplingScore >= 70
+                            ? "Moderate"
+                            : "Loose"}
                       </span>
                     </td>
                   </tr>

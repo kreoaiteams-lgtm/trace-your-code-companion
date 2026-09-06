@@ -27,12 +27,16 @@ import {
   type GraphNode,
   type ImpactReport,
 } from "@/lib/mock-data";
+import { createTraceSession } from "@/lib/trace-store";
 
 export const Route = createFileRoute("/impact")({
   head: () => ({
     meta: [
       { title: "Impact Analyzer — TraceAI" },
-      { name: "description", content: "Analyze the blast radius of code changes and generate risk reports." },
+      {
+        name: "description",
+        content: "Analyze the blast radius of code changes and generate risk reports.",
+      },
     ],
   }),
   component: ImpactAnalyzer,
@@ -56,7 +60,12 @@ function SeverityBadge({ severity }: { severity: string }) {
   const Icon = icons[severity] || Shield;
 
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize", styles[severity])}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize",
+        styles[severity],
+      )}
+    >
       <Icon className="size-3" />
       {severity}
     </span>
@@ -67,12 +76,18 @@ function ImpactAnalyzer() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [activeReport, setActiveReport] = useState<ImpactReport | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["direct", "transitive"]));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(["direct", "transitive"]),
+  );
+  const [checkpointSaved, setCheckpointSaved] = useState(false);
 
-  const filteredFiles = mockGraphData.nodes.filter((n) =>
-    n.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.path.toLowerCase().includes(searchQuery.toLowerCase()),
-  ).sort((a, b) => b.riskScore - a.riskScore);
+  const filteredFiles = mockGraphData.nodes
+    .filter(
+      (n) =>
+        n.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.path.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .sort((a, b) => b.riskScore - a.riskScore);
 
   const analyzeFile = (node: GraphNode) => {
     setSelectedFile(node.id);
@@ -107,11 +122,24 @@ function ImpactAnalyzer() {
       transitiveDependents: Array.from(transitive),
       affectedTests: [`${node.label.replace(/\.\w+$/, "")}.test.ts`],
       suggestions: [
-        node.riskScore > 60 ? "Consider adding integration tests before modifying" : "Low-risk change — proceed with standard review",
-        node.dependentCount > 10 ? "High fan-out: changes here affect many consumers" : "Limited blast radius",
-        node.complexity > 5 ? "High complexity: consider refactoring before modification" : "Manageable complexity",
+        node.riskScore > 60
+          ? "Consider adding integration tests before modifying"
+          : "Low-risk change — proceed with standard review",
+        node.dependentCount > 10
+          ? "High fan-out: changes here affect many consumers"
+          : "Limited blast radius",
+        node.complexity > 5
+          ? "High complexity: consider refactoring before modification"
+          : "Manageable complexity",
       ],
-      severity: node.riskScore >= 75 ? "critical" : node.riskScore >= 50 ? "high" : node.riskScore >= 25 ? "moderate" : "safe",
+      severity:
+        node.riskScore >= 75
+          ? "critical"
+          : node.riskScore >= 50
+            ? "high"
+            : node.riskScore >= 25
+              ? "moderate"
+              : "safe",
       createdAt: new Date().toISOString(),
     };
 
@@ -125,6 +153,28 @@ function ImpactAnalyzer() {
       else next.add(section);
       return next;
     });
+  };
+
+  const saveCheckpoint = () => {
+    if (!activeReport) return;
+    createTraceSession({
+      title: `Impact review: ${activeReport.targetFile.split("/").pop()}`,
+      description: `Risk ${activeReport.riskScore}/100 with a blast radius of ${activeReport.blastRadius} files.`,
+      filesExplored: [
+        activeReport.targetFile,
+        ...activeReport.directDependents,
+        ...activeReport.transitiveDependents,
+      ],
+      findings: activeReport.suggestions.map((suggestion, index) => ({
+        type: index === 0 ? "risk" : "suggestion",
+        title: index === 0 ? "Impact analysis completed" : "Recommended follow-up",
+        description: suggestion,
+        affectedFiles: [activeReport.targetFile],
+        severity: activeReport.severity === "critical" ? "critical" : "medium",
+      })),
+      questionsAsked: [`What breaks if ${activeReport.targetFile} changes?`],
+    });
+    setCheckpointSaved(true);
   };
 
   return (
@@ -154,7 +204,10 @@ function ImpactAnalyzer() {
                 selectedFile === node.id && "bg-accent",
               )}
             >
-              <div className="flex size-8 items-center justify-center rounded-md" style={{ backgroundColor: getRiskColor(node.riskScore) + "18" }}>
+              <div
+                className="flex size-8 items-center justify-center rounded-md"
+                style={{ backgroundColor: getRiskColor(node.riskScore) + "18" }}
+              >
                 <FileCode className="size-4" style={{ color: getRiskColor(node.riskScore) }} />
               </div>
               <div className="min-w-0 flex-1">
@@ -182,7 +235,8 @@ function ImpactAnalyzer() {
               </div>
               <h3 className="font-serif text-2xl font-medium">Impact Analyzer</h3>
               <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                Select a file from the list to analyze its blast radius. TraceAI will map every dependency chain and calculate the risk of modifying it.
+                Select a file from the list to analyze its blast radius. TraceAI will map every
+                dependency chain and calculate the risk of modifying it.
               </p>
             </div>
           </div>
@@ -199,27 +253,60 @@ function ImpactAnalyzer() {
                 </div>
                 <h2 className="font-serif text-2xl font-medium mt-2">{activeReport.targetFile}</h2>
                 {activeReport.targetFunction && (
-                  <p className="text-muted-foreground mt-1">Function: <code className="bg-muted px-1.5 py-0.5 rounded text-sm">{activeReport.targetFunction}</code></p>
+                  <p className="text-muted-foreground mt-1">
+                    Function:{" "}
+                    <code className="bg-muted px-1.5 py-0.5 rounded text-sm">
+                      {activeReport.targetFunction}
+                    </code>
+                  </p>
                 )}
               </div>
-              <Button variant="outline" className="gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={saveCheckpoint}
+                disabled={checkpointSaved}
+              >
                 <Shield className="size-4" />
-                Save as Checkpoint
+                {checkpointSaved ? "Checkpoint saved" : "Save as Checkpoint"}
               </Button>
             </div>
 
             {/* Score Cards */}
             <div className="grid grid-cols-4 gap-4 mb-8">
               {[
-                { label: "Risk Score", value: activeReport.riskScore, color: getRiskColor(activeReport.riskScore), suffix: "/100" },
-                { label: "Blast Radius", value: activeReport.blastRadius, color: "#6366f1", suffix: " files" },
-                { label: "Direct Deps", value: activeReport.directDependents.length, color: "#f59e0b", suffix: "" },
-                { label: "Affected Tests", value: activeReport.affectedTests.length, color: "#8b5cf6", suffix: "" },
+                {
+                  label: "Risk Score",
+                  value: activeReport.riskScore,
+                  color: getRiskColor(activeReport.riskScore),
+                  suffix: "/100",
+                },
+                {
+                  label: "Blast Radius",
+                  value: activeReport.blastRadius,
+                  color: "#6366f1",
+                  suffix: " files",
+                },
+                {
+                  label: "Direct Deps",
+                  value: activeReport.directDependents.length,
+                  color: "#f59e0b",
+                  suffix: "",
+                },
+                {
+                  label: "Affected Tests",
+                  value: activeReport.affectedTests.length,
+                  color: "#8b5cf6",
+                  suffix: "",
+                },
               ].map((card) => (
                 <div key={card.label} className="rounded-xl border border-border bg-card p-4">
-                  <p className="text-xs font-medium uppercase text-muted-foreground">{card.label}</p>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">
+                    {card.label}
+                  </p>
                   <p className="mt-1 text-3xl font-bold" style={{ color: card.color }}>
-                    {card.value}<span className="text-sm font-normal text-muted-foreground">{card.suffix}</span>
+                    {card.value}
+                    <span className="text-sm font-normal text-muted-foreground">{card.suffix}</span>
                   </p>
                 </div>
               ))}
@@ -248,15 +335,18 @@ function ImpactAnalyzer() {
                   ))}
 
                   {/* Center node */}
-                  <div className="relative mx-auto flex size-12 items-center justify-center rounded-full text-white font-bold text-sm z-10"
-                    style={{ backgroundColor: getRiskColor(activeReport.riskScore) }}>
+                  <div
+                    className="relative mx-auto flex size-12 items-center justify-center rounded-full text-white font-bold text-sm z-10"
+                    style={{ backgroundColor: getRiskColor(activeReport.riskScore) }}
+                  >
                     <Zap className="size-5" />
                   </div>
 
                   {/* Direct dependents */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     {activeReport.directDependents.slice(0, 6).map((dep, i) => {
-                      const angle = (2 * Math.PI * i) / Math.min(activeReport.directDependents.length, 6);
+                      const angle =
+                        (2 * Math.PI * i) / Math.min(activeReport.directDependents.length, 6);
                       const x = Math.cos(angle) * 80;
                       const y = Math.sin(angle) * 80;
                       return (
@@ -275,7 +365,9 @@ function ImpactAnalyzer() {
                   {/* Transitive dependents */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     {activeReport.transitiveDependents.slice(0, 8).map((dep, i) => {
-                      const angle = (2 * Math.PI * i) / Math.min(activeReport.transitiveDependents.length, 8) + 0.3;
+                      const angle =
+                        (2 * Math.PI * i) / Math.min(activeReport.transitiveDependents.length, 8) +
+                        0.3;
                       const x = Math.cos(angle) * 140;
                       const y = Math.sin(angle) * 140;
                       return (
@@ -293,8 +385,12 @@ function ImpactAnalyzer() {
                 </div>
               </div>
               <div className="flex justify-center gap-6 mt-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2"><span className="size-3 rounded-full bg-amber-300" /> Direct dependents</div>
-                <div className="flex items-center gap-2"><span className="size-3 rounded-full bg-blue-200" /> Transitive</div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-amber-300" /> Direct dependents
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full bg-blue-200" /> Transitive
+                </div>
               </div>
             </div>
 
@@ -306,14 +402,23 @@ function ImpactAnalyzer() {
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="size-4 text-amber-500" />
-                  <h3 className="font-medium">Direct Dependents ({activeReport.directDependents.length})</h3>
+                  <h3 className="font-medium">
+                    Direct Dependents ({activeReport.directDependents.length})
+                  </h3>
                 </div>
-                {expandedSections.has("direct") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                {expandedSections.has("direct") ? (
+                  <ChevronDown className="size-4" />
+                ) : (
+                  <ChevronRight className="size-4" />
+                )}
               </button>
               {expandedSections.has("direct") && (
                 <div className="border-t border-border px-4 pb-4">
                   {activeReport.directDependents.map((dep) => (
-                    <div key={dep} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                    <div
+                      key={dep}
+                      className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                    >
                       <ArrowRight className="size-3 text-amber-500" />
                       <code className="text-sm font-mono">{dep}</code>
                     </div>
@@ -330,14 +435,23 @@ function ImpactAnalyzer() {
               >
                 <div className="flex items-center gap-2">
                   <Zap className="size-4 text-blue-500" />
-                  <h3 className="font-medium">Transitive Dependents ({activeReport.transitiveDependents.length})</h3>
+                  <h3 className="font-medium">
+                    Transitive Dependents ({activeReport.transitiveDependents.length})
+                  </h3>
                 </div>
-                {expandedSections.has("transitive") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                {expandedSections.has("transitive") ? (
+                  <ChevronDown className="size-4" />
+                ) : (
+                  <ChevronRight className="size-4" />
+                )}
               </button>
               {expandedSections.has("transitive") && (
                 <div className="border-t border-border px-4 pb-4">
                   {activeReport.transitiveDependents.map((dep) => (
-                    <div key={dep} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                    <div
+                      key={dep}
+                      className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                    >
                       <ArrowRight className="size-3 text-blue-500" />
                       <code className="text-sm font-mono">{dep}</code>
                     </div>
