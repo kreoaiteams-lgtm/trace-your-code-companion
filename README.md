@@ -1,25 +1,33 @@
-# Trace: Your Code Companion
+# TraceAI — Think Better with Your Code
 
-We are building TRACE, a web app that connects to ones github accounts, and gives solutions to there questions and gives audience for them to brainstorm with there ideas, give solutions, to them without them requiring any imp tokens,
-i need a clean and minimal app, use claude serif font, for it, make it white themed soft and vibrant feel
+TraceAI is a Checkpoint-Native codebase intelligence platform that maps structural dependencies via Entire Graph, provides impact analysis for safe refactoring, and preserves context through Checkpoint-backed sessions.
 
-This project was built with [Lovable](https://lovable.dev).
+## 🚀 The Hackathon Project
+This repository contains the UI and Frontend codebase for the **Buildathon 2026** submission. We built this under the **Checkpoint-Native Developer Experience** and **Graph Intelligence** tracks.
 
-## Build with Lovable
+### Key Features
+- **Graph Explorer**: Visualize your codebase's dependency graph powered by Entire Graph.
+- **Impact Analyzer**: See the exact blast radius of a file or function change before you make it.
+- **Session Manager**: Save your exploration paths as Checkpoints so you never lose context when handing off to a teammate or AI agent.
+- **Databricks Analytics**: Track codebase complexity and risk trends historically.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/be137bd5-c780-48b1-9242-50e8d9ef65dd).
+## 🛠️ Tech Stack
+- React + Vite + TypeScript
+- TanStack Router for type-safe routing
+- Tailwind CSS with a soft, vibrant Anthropic typography design system
+- Lucide React for iconography
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
+## 🏁 Getting Started
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+npm install
 npm run dev
+```
+
+### Entire CLI Setup
+To utilize the graph intelligence and checkpoints, make sure you have the Entire CLI configured:
+```bash
+entire login
+entire enable -y --agent gemini
+entire plugin install graph
+entire graph init-agents --repo .
 ```

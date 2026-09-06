@@ -166,9 +166,9 @@ function GraphExplorer() {
   const connectedIds = activeNodeId ? getConnectedIds(activeNodeId) : new Set<string>();
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="mesh-bg flex h-[calc(100vh-4rem)] flex-col">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 border-b border-border bg-card px-5 py-3">
+      <div className="glass flex items-center gap-3 px-5 py-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <input
@@ -176,18 +176,18 @@ function GraphExplorer() {
             placeholder="Search nodes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-md border border-border bg-background py-2 pl-9 pr-3 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-lg border border-white/40 bg-white/50 py-2 pl-9 pr-3 text-sm backdrop-blur-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-1 rounded-md border border-border bg-background p-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-white/40 bg-white/50 p-0.5 backdrop-blur-sm">
           {["all", "module", "component", "function"].map((type) => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
               className={cn(
-                "rounded px-3 py-1.5 text-xs font-medium capitalize transition-colors",
-                filterType === type ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all duration-200",
+                filterType === type ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-white/60",
               )}
             >
               {type}
@@ -211,11 +211,13 @@ function GraphExplorer() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Graph Canvas */}
-        <div className="relative flex-1 bg-[#fafbfc] overflow-hidden">
+        <div className="relative flex-1 overflow-hidden" style={{
+          background: "radial-gradient(ellipse 120% 80% at 50% 40%, oklch(0.96 0.02 245 / 30%), oklch(0.97 0.02 160 / 20%), transparent 70%), oklch(0.993 0.003 85)",
+        }}>
           {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-30" style={{
-            backgroundImage: "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: "radial-gradient(circle, oklch(0.70 0.02 260 / 40%) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
           }} />
 
           <svg
@@ -349,7 +351,7 @@ function GraphExplorer() {
           </svg>
 
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 rounded-lg border border-border bg-card/95 p-3 backdrop-blur-sm text-xs space-y-1.5">
+          <div className="glass absolute bottom-4 left-4 rounded-xl p-3 text-xs space-y-1.5">
             <p className="font-semibold text-foreground mb-2">Risk Level</p>
             {[
               { label: "Critical (75+)", color: "#ef4444" },
@@ -365,7 +367,7 @@ function GraphExplorer() {
           </div>
 
           {/* Stats overlay */}
-          <div className="absolute top-4 left-4 rounded-lg border border-border bg-card/95 p-3 backdrop-blur-sm text-xs">
+          <div className="glass absolute top-4 left-4 rounded-xl p-3 text-xs">
             <div className="flex items-center gap-4">
               <div><span className="font-semibold text-foreground">{filteredNodes.length}</span> <span className="text-muted-foreground">nodes</span></div>
               <div><span className="font-semibold text-foreground">{filteredEdges.length}</span> <span className="text-muted-foreground">edges</span></div>
@@ -376,7 +378,7 @@ function GraphExplorer() {
 
         {/* Detail Panel */}
         {selectedNode && (
-          <div className="w-80 border-l border-border bg-card overflow-y-auto">
+          <div className="glass-sidebar w-80 overflow-y-auto">
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-serif text-lg font-medium">{selectedNode.label}</h3>
@@ -387,7 +389,7 @@ function GraphExplorer() {
 
               <div className="space-y-4">
                 {/* Risk Score */}
-                <div className="rounded-lg border border-border p-4">
+                <div className="glass rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-medium uppercase text-muted-foreground">Risk Score</span>
                     <span
@@ -421,7 +423,7 @@ function GraphExplorer() {
                     { label: "Changes (30d)", value: selectedNode.changeFrequency },
                     { label: "Dependents", value: selectedNode.dependentCount },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-md bg-muted/50 p-2.5">
+                    <div key={item.label} className="rounded-lg bg-white/50 p-2.5 backdrop-blur-sm">
                       <p className="text-[10px] uppercase text-muted-foreground">{item.label}</p>
                       <p className="text-sm font-semibold capitalize">{item.value}</p>
                     </div>
@@ -429,7 +431,7 @@ function GraphExplorer() {
                 </div>
 
                 {/* Path */}
-                <div className="rounded-md bg-muted/50 p-3">
+                <div className="rounded-lg bg-white/50 p-3 backdrop-blur-sm">
                   <p className="text-[10px] uppercase text-muted-foreground mb-1">Path</p>
                   <p className="text-xs font-mono text-foreground break-all">{selectedNode.path}</p>
                 </div>
