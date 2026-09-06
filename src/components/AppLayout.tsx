@@ -1,29 +1,35 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Bell,
-  Check,
-  CircleHelp,
-  Github,
   Home,
   Menu,
   MoreHorizontal,
   Plus,
-  Search,
   X,
   BarChart3,
   Shield,
   Clock,
   Network,
+  LogOut,
+  Settings,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/AuthProvider";
+
 
 const navItems = [
   { label: "Home", icon: Home, href: "/" },
-  { label: "Explore", icon: Network, href: "/explore" },
   { label: "Impact", icon: Shield, href: "/impact" },
   { label: "Sessions", icon: Clock, href: "/sessions" },
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
@@ -38,8 +44,8 @@ const repositories = [
 export function AppLayout({ children }: { children: ReactNode }) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
-  const [connected, setConnected] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout, activeRepo, setActiveRepo } = useAuth();
 
   return (
     <div className="mesh-bg min-h-screen text-foreground flex">
@@ -49,24 +55,20 @@ export function AppLayout({ children }: { children: ReactNode }) {
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-10 items-center justify-between px-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-lg shadow-sm">
-              <img src="/logo.png" alt="TraceAI Logo" className="size-6 rounded object-cover" />
-            </div>
-          </div>
+        <div className="w-full relative h-16 -mx-4 -mt-5 mb-5 flex items-center justify-center border-b border-sidebar-border bg-white">
+          <img src="/logo.png" alt="TraceAI Banner" className="h-10 w-auto object-contain" />
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden absolute top-3 right-3 hover:bg-black/5 size-8"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close navigation"
           >
-            <X />
+            <X className="size-4" />
           </Button>
         </div>
 
-        <nav className="mt-8 space-y-0.5" aria-label="Main navigation">
+        <nav className="space-y-0.5" aria-label="Main navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
@@ -104,60 +106,64 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Button>
           </div>
           <div className="space-y-0.5">
-            {repositories.map((repo) => (
-              <Button
-                key={repo.name}
-                variant="ghost"
-                className="w-full justify-start gap-3 rounded-lg px-3 font-normal text-sm"
-              >
-                <span className="size-2.5 rounded-full bg-foreground ring-2 ring-background shadow-sm" />
-                <span className="truncate">{repo.name}</span>
-              </Button>
-            ))}
+            {repositories.map((repo) => {
+              const isActive = activeRepo === repo.name;
+              return (
+                <Button
+                  key={repo.name}
+                  variant="ghost"
+                  onClick={() => setActiveRepo(repo.name)}
+                  className={cn(
+                    "w-full justify-start gap-3 rounded-lg px-3 font-normal text-sm transition-all duration-200",
+                    isActive ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <span className={cn("size-2.5 rounded-full shadow-sm", repo.color)} />
+                  <span className="truncate">{repo.name}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
 
         <div className="mt-auto border-t border-border pt-4">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3 rounded-lg px-2 font-normal"
-          >
-            <Avatar className="size-8 border-2 border-border shadow-sm">
-              <AvatarFallback className="bg-foreground text-xs font-semibold text-background">
-                AK
-              </AvatarFallback>
-            </Avatar>
-            <span className="min-w-0 flex-1 text-left">
-              <span className="block truncate text-sm font-medium">Alex Kim</span>
-              <span className="block truncate text-xs text-muted-foreground">@alexbuilds</span>
-            </span>
-            <MoreHorizontal className="size-4 text-muted-foreground" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 rounded-lg px-2 font-normal hover:bg-muted transition-all duration-200 group"
+              >
+                <Avatar className="size-8 border border-border shadow-sm group-hover:scale-105 transition-transform">
+                  <AvatarFallback className="bg-foreground text-xs font-semibold text-background">
+                    {user?.name?.split(" ").map(n => n[0]).join("") || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block truncate text-sm font-medium">{user?.name || "User"}</span>
+                  <span className="block truncate text-xs text-muted-foreground">@{user?.username || "user"}</span>
+                </span>
+                <MoreHorizontal className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="gap-2 cursor-pointer">
+                <Settings className="size-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={logout}>
+                <LogOut className="size-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
       <div className="flex-1 lg:pl-64 w-full flex flex-col">
-        <header className="glass sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between px-5 md:px-8 border-b border-border/40 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation"
-            >
-              <Menu />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="rounded-lg" aria-label="Help">
-              <CircleHelp className="size-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-lg" aria-label="Notifications">
-              <Bell className="size-4" />
-            </Button>
-          </div>
-        </header>
+
 
         <main className="flex-1 overflow-auto w-full relative">
           {children}

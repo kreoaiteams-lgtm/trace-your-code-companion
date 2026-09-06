@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -12,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppLayout } from "../components/AppLayout";
+import { AuthProvider, useAuth } from "../components/AuthProvider";
 
 function NotFoundComponent() {
   return (
@@ -78,14 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TRACE" },
-      { name: "description", content: "Think better with your code and your community." },
-      { name: "author", content: "TRACE" },
-      { property: "og:title", content: "TRACE" },
-      { property: "og:description", content: "Think better with your code and your community." },
+      { title: "TraceAI" },
+      { name: "description", content: "Understand your code. Ship with confidence." },
+      { name: "author", content: "TraceAI" },
+      { property: "og:title", content: "TraceAI" },
+      { property: "og:description", content: "Understand your code. Ship with confidence." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -121,15 +122,37 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AuthGatedLayout() {
+  const { isAuthenticated } = useAuth();
+  const routerState = useRouterState();
+  const isLoginRoute = routerState.location.pathname === "/login";
+
+  // Login page renders without sidebar wrapper
+  if (isLoginRoute) {
+    return <Outlet />;
+  }
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Outlet />;
+  }
+
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppLayout>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-      </AppLayout>
+      <AuthProvider>
+        <AuthGatedLayout />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
+

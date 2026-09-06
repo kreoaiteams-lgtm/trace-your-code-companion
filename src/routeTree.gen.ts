@@ -11,8 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as SessionsRouteImport } from './routes/sessions'
 
 const IndexRoute = IndexRouteImport.update({
@@ -25,14 +25,14 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExploreRoute = ExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ImpactRoute = ImpactRouteImport.update({
   id: '/impact',
   path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionsRoute = SessionsRouteImport.update({
@@ -44,38 +44,38 @@ const SessionsRoute = SessionsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/explore': typeof ExploreRoute
   '/impact': typeof ImpactRoute
+  '/login': typeof LoginRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/explore': typeof ExploreRoute
   '/impact': typeof ImpactRoute
+  '/login': typeof LoginRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/explore': typeof ExploreRoute
   '/impact': typeof ImpactRoute
+  '/login': typeof LoginRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analytics' | '/explore' | '/impact' | '/sessions'
+  fullPaths: '/' | '/analytics' | '/impact' | '/login' | '/sessions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analytics' | '/explore' | '/impact' | '/sessions'
-  id: '__root__' | '/' | '/analytics' | '/explore' | '/impact' | '/sessions'
+  to: '/' | '/analytics' | '/impact' | '/login' | '/sessions'
+  id: '__root__' | '/' | '/analytics' | '/impact' | '/login' | '/sessions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
-  ExploreRoute: typeof ExploreRoute
   ImpactRoute: typeof ImpactRoute
+  LoginRoute: typeof LoginRoute
   SessionsRoute: typeof SessionsRoute
 }
 
@@ -95,18 +95,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/impact': {
       id: '/impact'
       path: '/impact'
       fullPath: '/impact'
       preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sessions': {
@@ -122,8 +122,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
-  ExploreRoute: ExploreRoute,
   ImpactRoute: ImpactRoute,
+  LoginRoute: LoginRoute,
   SessionsRoute: SessionsRoute,
 }
 export const routeTree = rootRouteImport
