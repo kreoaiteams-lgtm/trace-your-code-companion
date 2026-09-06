@@ -1,5 +1,5 @@
 // Generated from Entire Graph. Run npm run graph:generate to refresh.
-import type { GraphData } from "./mock-data";
+import type { GraphData } from "./types";
 
 export const entireGraphData: GraphData = {
   "nodes": [

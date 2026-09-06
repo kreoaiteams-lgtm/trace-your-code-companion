@@ -37,7 +37,7 @@ export function getSeverityColor(severity: string) {
     default: return "#94a3b8";
   }
 }
-import { readTraceSessions, updateTraceSession } from "@/lib/trace-store";
+import { readTraceSessions, createTraceSession, updateTraceSession } from "@/lib/trace-store";
 
 export const Route = createFileRoute("/sessions")({
   head: () => ({

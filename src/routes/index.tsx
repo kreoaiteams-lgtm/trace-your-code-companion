@@ -18,16 +18,15 @@ import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
 import { createServerFn } from "@tanstack/react-start";
 
-export const chatAction = createServerFn(
-  "POST",
-  async (payload: { messages: Array<{ role: string; content: string }> }) => {
+const chatAction = createServerFn({ method: "POST" })
+  .handler(async ({ data }: { data: { messages: Array<{ role: string; content: string }> } }) => {
     const apiKey = process.env.SARVAM_API_KEY;
 
     if (!apiKey) {
       throw new Error("SARVAM_API_KEY is not configured in the environment");
     }
 
-    const { messages } = payload;
+    const { messages } = data;
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Invalid messages payload");
     }
@@ -52,8 +51,7 @@ export const chatAction = createServerFn(
     }
 
     return await sarvamResponse.json();
-  },
-);
+  });
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -195,7 +193,7 @@ function TraceApp() {
     ];
 
     try {
-      const data = await chatAction({ messages: apiMessages });
+      const data = await chatAction({ data: { messages: apiMessages } });
 
       const content =
         data?.choices?.[0]?.message?.content ??
