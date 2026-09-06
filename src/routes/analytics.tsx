@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -34,6 +34,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { mockAnalytics, getRiskColor } from "@/lib/mock-data";
+import { loadAnalytics, type AnalyticsSnapshot } from "@/lib/databricks-analytics";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -51,6 +52,23 @@ export const Route = createFileRoute("/analytics")({
 
 function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("30d");
+  const [snapshot, setSnapshot] = useState<AnalyticsSnapshot>({
+    data: mockAnalytics,
+    source: "demo-fallback",
+    generatedAt: "",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadAnalytics(timeRange).then((nextSnapshot) => {
+      if (!cancelled) setSnapshot(nextSnapshot);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [timeRange]);
+
+  const analytics = snapshot.data;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
@@ -61,7 +79,9 @@ function AnalyticsDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <Database className="size-4 text-muted-foreground" />
               <span className="text-xs font-medium uppercase text-muted-foreground tracking-wider">
-                Powered by Databricks
+                {snapshot.source === "databricks"
+                  ? "Live Databricks data"
+                  : "Databricks demo fallback"}
               </span>
             </div>
             <h1 className="font-serif text-3xl font-medium">Codebase Analytics</h1>
@@ -85,6 +105,18 @@ function AnalyticsDashboard() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="mb-6 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-xs">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Database className="size-3.5" />
+            <span>
+              Source: <span className="font-medium text-foreground">{snapshot.source}</span>
+              {snapshot.generatedAt &&
+                ` · refreshed ${new Date(snapshot.generatedAt).toLocaleTimeString()}`}
+            </span>
+          </div>
+          {snapshot.warning && <span className="text-amber-600">{snapshot.warning}</span>}
         </div>
 
         {/* KPI Cards */}
@@ -163,7 +195,7 @@ function AnalyticsDashboard() {
               <Activity className="size-4 text-muted-foreground" />
             </div>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={mockAnalytics.riskTrends}>
+              <AreaChart data={analytics.riskTrends}>
                 <defs>
                   <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
@@ -212,7 +244,7 @@ function AnalyticsDashboard() {
               <BarChart3 className="size-4 text-muted-foreground" />
             </div>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={mockAnalytics.weeklyActivity}>
+              <BarChart data={analytics.weeklyActivity}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="#9ca3af" />
                 <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" />
@@ -302,8 +334,8 @@ function AnalyticsDashboard() {
                     );
                   }}
                 />
-                <Scatter data={mockAnalytics.complexityHotspots} name="Files">
-                  {mockAnalytics.complexityHotspots.map((entry, i) => (
+                <Scatter data={analytics.complexityHotspots} name="Files">
+                  {analytics.complexityHotspots.map((entry, i) => (
                     <Cell key={i} fill={getRiskColor(entry.risk)} fillOpacity={0.7} />
                   ))}
                 </Scatter>
@@ -312,7 +344,7 @@ function AnalyticsDashboard() {
 
             {/* Hotspot legend */}
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {mockAnalytics.complexityHotspots.slice(0, 4).map((h) => (
+              {analytics.complexityHotspots.slice(0, 4).map((h) => (
                 <div
                   key={h.file}
                   className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs"
@@ -337,7 +369,7 @@ function AnalyticsDashboard() {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
-                  data={mockAnalytics.languageDistribution}
+                  data={analytics.languageDistribution}
                   cx="50%"
                   cy="50%"
                   innerRadius={50}
@@ -346,7 +378,7 @@ function AnalyticsDashboard() {
                   nameKey="language"
                   paddingAngle={2}
                 >
-                  {mockAnalytics.languageDistribution.map((entry, i) => (
+                  {analytics.languageDistribution.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
@@ -360,7 +392,7 @@ function AnalyticsDashboard() {
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2 mt-2">
-              {mockAnalytics.languageDistribution.map((lang) => (
+              {analytics.languageDistribution.map((lang) => (
                 <div key={lang.language} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="size-3 rounded" style={{ backgroundColor: lang.color }} />
@@ -404,7 +436,7 @@ function AnalyticsDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {mockAnalytics.moduleCoupling.map((coupling, i) => (
+                {analytics.moduleCoupling.map((coupling, i) => (
                   <tr
                     key={i}
                     className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"

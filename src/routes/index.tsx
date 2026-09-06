@@ -195,48 +195,55 @@ function TraceApp() {
       {/* Floating Input Dock */}
       <div className="absolute bottom-6 left-0 right-0 z-20 mx-auto w-full max-w-3xl px-6">
         <div className={cn(
-          "flex flex-col rounded-2xl border bg-card shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden transition-all duration-300",
-          isThinking ? "border-foreground/20 shadow-foreground/5" : "border-border/60"
+          "flex flex-col border bg-card shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden transition-all duration-300",
+          isThinking ? "border-foreground/20 shadow-foreground/5" : "border-border/60",
+          isInitialScreen ? "rounded-2xl" : "rounded-[28px]"
         )}>
           {/* Input Header */}
-          <div className="flex items-center gap-2 bg-muted/20 px-4 py-2 border-b border-border/30">
-            <FolderOpen className="size-3.5 text-muted-foreground" />
-            <span className="text-[12px] font-medium text-muted-foreground">{activeRepo}</span>
-          </div>
-
-          {/* Text Area */}
-          <textarea
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Do anything..."
-            className="w-full resize-none bg-transparent px-4 py-2.5 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[40px] transition-all duration-300 mt-1"
-            disabled={isThinking}
-            rows={1}
-            style={{
-              height: "auto",
-              minHeight: "40px",
-              maxHeight: "150px"
-            }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = target.scrollHeight + 'px';
-            }}
-          />
-
-          {/* Bottom Toolbar */}
-          <div className="flex items-center justify-between px-3 pb-3">
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-muted text-muted-foreground">
-                <Plus className="size-4" />
-              </Button>
+          {isInitialScreen && (
+            <div className="flex items-center gap-2 bg-muted/20 px-4 py-2 border-b border-border/30">
+              <FolderOpen className="size-3.5 text-muted-foreground" />
+              <span className="text-[12px] font-medium text-muted-foreground">{activeRepo}</span>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-muted text-muted-foreground">
-                <Mic className="size-4" />
-              </Button>
+          )}
+
+          <div className="flex items-end p-2">
+            {isInitialScreen && (
+              <div className="pb-1 pr-1">
+                <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-muted text-muted-foreground">
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Text Area */}
+            <textarea
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={isInitialScreen ? "Do anything..." : "Reply to TraceAI..."}
+              className="flex-1 w-full resize-none bg-transparent px-3 py-2.5 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300"
+              disabled={isThinking}
+              rows={1}
+              style={{
+                height: "auto",
+                minHeight: "40px",
+                maxHeight: "150px"
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = target.scrollHeight + 'px';
+              }}
+            />
+
+            {/* Right Buttons */}
+            <div className="flex items-center gap-1 pb-1 pl-1">
+              {isInitialScreen && (
+                <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-muted text-muted-foreground">
+                  <Mic className="size-4" />
+                </Button>
+              )}
               <button
                 onClick={() => handleSubmit(input)}
                 className={cn(
