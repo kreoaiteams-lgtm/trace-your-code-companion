@@ -72,24 +72,58 @@ function TraceApp() {
 
   const prompts = getRepoPrompts(activeRepo);
 
-  const handleSubmit = (text: string = input) => {
+  const handleSubmit = async (text: string = input) => {
     if (!text.trim() || isThinking) return;
     
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput("");
     setIsThinking(true);
-    
-    // Simulate AI thinking then responding
-    setTimeout(() => {
-      const aiMsg: Message = { 
-        id: (Date.now() + 1).toString(), 
-        role: "ai", 
-        content: `I can certainly help you with that! Let's take a look at the current architecture in ${activeRepo}...` 
+
+    // Build the message history for the API
+    const apiMessages = [
+      {
+        role: "system" as const,
+        content: `You are TraceAI, an expert codebase intelligence assistant. The user is currently working in the "${activeRepo}" repository. Help them analyze architecture, find bugs, refactor code, and understand dependencies. Be concise, specific, and technical. Use markdown formatting when helpful.`,
+      },
+      ...updatedMessages.map((m) => ({
+        role: m.role === "ai" ? ("assistant" as const) : ("user" as const),
+        content: m.content,
+      })),
+    ];
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
+
+      const data = await res.json();
+      const content =
+        data?.choices?.[0]?.message?.content ??
+        "I wasn't able to generate a response. Please try again.";
+
+      const aiMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content,
       };
       setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error("Chat error:", err);
+      const fallbackMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content: `I can certainly help you with that! Let's take a look at the current architecture in ${activeRepo}. (Note: AI backend is currently unavailable — this is a fallback response.)`,
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
+    } finally {
       setIsThinking(false);
-    }, 2000);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

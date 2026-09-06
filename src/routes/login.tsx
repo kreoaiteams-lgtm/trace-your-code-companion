@@ -55,7 +55,7 @@ function LoginPage() {
         name: "Alex Kim",
         username: "alexbuilds",
       });
-      navigate({ to: "/" });
+      navigate({ to: "/connect" });
     }, 1500);
   };
 
@@ -152,7 +152,7 @@ function LoginPage() {
                 setIsConnecting(true);
                 setTimeout(() => {
                   login({ name: "Alex Kim", username: "alexbuilds" });
-                  navigate({ to: "/" });
+                  navigate({ to: "/connect" });
                 }, 1500);
               }}
               disabled={isConnecting}
@@ -167,7 +167,7 @@ function LoginPage() {
                 setIsConnecting(true);
                 setTimeout(() => {
                   login({ name: "Alex Kim", username: "alexbuilds" });
-                  navigate({ to: "/" });
+                  navigate({ to: "/connect" });
                 }, 1500);
               }}
               disabled={isConnecting}

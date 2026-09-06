@@ -7,6 +7,9 @@ import {
   ChevronRight,
   FileCode,
   Flame,
+  GitBranch,
+  Loader2,
+  Network,
   Search,
   Shield,
   ShieldAlert,
@@ -75,9 +78,15 @@ function ImpactAnalyzer() {
   const [activeReport, setActiveReport] = useState<ImpactReport | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["direct", "transitive"]),
+    new Set(["direct", "transitive", "callers", "callees", "cochanges"]),
   );
   const [checkpointSaved, setCheckpointSaved] = useState(false);
+
+  // Live Entire Graph state
+  const [symbolQuery, setSymbolQuery] = useState("");
+  const [liveGraphData, setLiveGraphData] = useState<any | null>(null);
+  const [liveGraphLoading, setLiveGraphLoading] = useState(false);
+  const [liveGraphError, setLiveGraphError] = useState<string | null>(null);
 
   const filteredFiles = entireGraphData.nodes
     .filter(
@@ -87,8 +96,34 @@ function ImpactAnalyzer() {
     )
     .sort((a, b) => b.riskScore - a.riskScore);
 
+  const runLiveGraphAnalysis = async (symbol: string) => {
+    if (!symbol.trim()) return;
+    setLiveGraphLoading(true);
+    setLiveGraphError(null);
+    setLiveGraphData(null);
+
+    try {
+      const res = await fetch(`/api/graph-impact?symbol=${encodeURIComponent(symbol)}`);
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setLiveGraphData(data);
+    } catch (err) {
+      console.error("Live graph analysis failed:", err);
+      setLiveGraphError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLiveGraphLoading(false);
+    }
+  };
+
   const analyzeFile = (node: GraphNode) => {
     setSelectedFile(node.id);
+    setCheckpointSaved(false);
+
+    // Also trigger a live graph analysis for the file's main symbol
+    const symbolName = node.label.replace(/\.\w+$/, "");
+    setSymbolQuery(symbolName);
+    runLiveGraphAnalysis(symbolName);
 
     const existing = mockImpactReports.find((r) => r.targetFile === node.path);
     if (existing) {
@@ -194,6 +229,27 @@ function ImpactAnalyzer() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-md border border-border bg-background py-2 pl-9 pr-3 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             />
+          </div>
+
+          {/* Live Symbol Search */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Network className="size-3.5 text-emerald-500" />
+              <span className="text-[11px] font-semibold uppercase text-emerald-600 tracking-wider">Live Graph</span>
+            </div>
+            <div className="relative">
+              <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search symbol (e.g. useAuth)..."
+                value={symbolQuery}
+                onChange={(e) => setSymbolQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") runLiveGraphAnalysis(symbolQuery);
+                }}
+                className="w-full rounded-md border border-emerald-500/30 bg-emerald-500/5 py-2 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+              />
+            </div>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -475,6 +531,161 @@ function ImpactAnalyzer() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Live Entire Graph Section */}
+            <div className="rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 p-6 mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Network className="size-5 text-emerald-500" />
+                <h3 className="font-serif text-lg font-medium">Live Entire Graph Analysis</h3>
+                <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  Live
+                </span>
+              </div>
+
+              {liveGraphLoading && (
+                <div className="flex items-center gap-3 py-8 justify-center text-muted-foreground">
+                  <Loader2 className="size-5 animate-spin text-emerald-500" />
+                  <span className="text-sm">Querying Entire Graph engine…</span>
+                </div>
+              )}
+
+              {liveGraphError && (
+                <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-600">
+                  <p className="font-medium">Graph query failed</p>
+                  <p className="text-xs mt-1 text-red-500/80">{liveGraphError}</p>
+                </div>
+              )}
+
+              {liveGraphData && !liveGraphLoading && (
+                <div className="space-y-4">
+                  {/* Focus Symbol */}
+                  {liveGraphData.focus && (
+                    <div className="rounded-lg bg-background border border-border p-4">
+                      <p className="text-xs font-medium uppercase text-muted-foreground mb-1">Focus Symbol</p>
+                      <code className="text-sm font-mono font-semibold text-foreground">{liveGraphData.focus.qualified_name || liveGraphData.focus.name}</code>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <span className="bg-muted px-1.5 py-0.5 rounded">{liveGraphData.focus.kind}</span>
+                        <span>{liveGraphData.focus.file_path}:{liveGraphData.focus.start_line}</span>
+                        <span>{liveGraphData.focus.language}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: "Callers", value: liveGraphData.callers?.total ?? 0, color: "#f59e0b" },
+                      { label: "Callees", value: liveGraphData.callees?.total ?? 0, color: "#6366f1" },
+                      { label: "Co-Changes", value: liveGraphData.co_changes?.total ?? 0, color: "#8b5cf6" },
+                      { label: "Type Users", value: liveGraphData.type_consumers?.total ?? 0, color: "#22c55e" },
+                    ].map((stat) => (
+                      <div key={stat.label} className="rounded-lg bg-background border border-border p-3 text-center">
+                        <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                        <p className="text-[10px] uppercase font-medium text-muted-foreground">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Callers */}
+                  {liveGraphData.callers?.entries?.length > 0 && (
+                    <div className="rounded-lg border border-border bg-background">
+                      <button className="flex w-full items-center justify-between p-3 text-left" onClick={() => toggleSection("callers")}>
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="size-4 text-amber-500" />
+                          <h4 className="text-sm font-medium">Who calls this ({liveGraphData.callers.total})</h4>
+                        </div>
+                        {expandedSections.has("callers") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                      </button>
+                      {expandedSections.has("callers") && (
+                        <div className="border-t border-border px-3 pb-3">
+                          {liveGraphData.callers.entries.map((entry: any, i: number) => (
+                            <div key={i} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                              <ArrowRight className="size-3 text-amber-500" />
+                              <div className="min-w-0">
+                                <code className="text-xs font-mono font-medium">{entry.endpoint?.name}</code>
+                                {entry.endpoint?.file_path && (
+                                  <p className="text-[10px] text-muted-foreground truncate">{entry.endpoint.file_path}:{entry.endpoint.start_line}</p>
+                                )}
+                              </div>
+                              <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">depth {entry.depth}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Callees */}
+                  {liveGraphData.callees?.entries?.length > 0 && (
+                    <div className="rounded-lg border border-border bg-background">
+                      <button className="flex w-full items-center justify-between p-3 text-left" onClick={() => toggleSection("callees")}>
+                        <div className="flex items-center gap-2">
+                          <Zap className="size-4 text-indigo-500" />
+                          <h4 className="text-sm font-medium">What it calls ({liveGraphData.callees.total})</h4>
+                        </div>
+                        {expandedSections.has("callees") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                      </button>
+                      {expandedSections.has("callees") && (
+                        <div className="border-t border-border px-3 pb-3">
+                          {liveGraphData.callees.entries.map((entry: any, i: number) => (
+                            <div key={i} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                              <ArrowRight className="size-3 text-indigo-500" />
+                              <div className="min-w-0">
+                                <code className="text-xs font-mono font-medium">{entry.endpoint?.qualified_name || entry.endpoint?.name}</code>
+                                {entry.endpoint?.file_path && (
+                                  <p className="text-[10px] text-muted-foreground truncate">{entry.endpoint.file_path}</p>
+                                )}
+                                {entry.endpoint?.external && <span className="ml-1 text-[10px] text-blue-500">(external)</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Co-Changes */}
+                  {liveGraphData.co_changes?.entries?.length > 0 && (
+                    <div className="rounded-lg border border-border bg-background">
+                      <button className="flex w-full items-center justify-between p-3 text-left" onClick={() => toggleSection("cochanges")}>
+                        <div className="flex items-center gap-2">
+                          <GitBranch className="size-4 text-purple-500" />
+                          <h4 className="text-sm font-medium">Co-Changed Files ({liveGraphData.co_changes.total})</h4>
+                        </div>
+                        {expandedSections.has("cochanges") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                      </button>
+                      {expandedSections.has("cochanges") && (
+                        <div className="border-t border-border px-3 pb-3">
+                          {liveGraphData.co_changes.entries.map((entry: any, i: number) => (
+                            <div key={i} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                              <ArrowRight className="size-3 text-purple-500" />
+                              <div className="min-w-0">
+                                <code className="text-xs font-mono font-medium">{entry.endpoint?.name}</code>
+                                <p className="text-[10px] text-muted-foreground">{entry.detail}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Graph Stats */}
+                  {liveGraphData.stats && (
+                    <div className="flex items-center gap-4 text-[10px] text-muted-foreground pt-2 border-t border-border/50">
+                      <span>Graph: {liveGraphData.stats.files} files · {liveGraphData.stats.symbols} symbols · {liveGraphData.stats.relations} relations</span>
+                      <span className="ml-auto">{liveGraphData.total_latency_ms}ms</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!liveGraphData && !liveGraphLoading && !liveGraphError && (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  Select a file or search a symbol to run live graph analysis.
+                </p>
+              )}
             </div>
           </div>
         )}
