@@ -1,36 +1,58 @@
 # TraceAI
 
-**1-Sentence Summary:** TraceAI is a full-stack codebase intelligence platform that maps structural dependencies via Entire Graph, provides impact analysis for safe refactoring, and preserves context through Checkpoint-backed sessions.
+## One-sentence summary
+TraceAI is a full-stack codebase intelligence platform that maps structural dependencies via Entire Graph, provides impact analysis for safe refactoring, and preserves context through Checkpoint-backed sessions.
 
-**Track Selected:** Checkpoint-Native Developer Experience + Graph Intelligence
-**Bonus:** Best Use of Databricks
+## Problem, intended user and why it matters
+**Intended User:** Software developers and engineering teams.
+**Problem:** Developers often struggle to understand the "blast radius" of code changes in large codebases. Furthermore, when they investigate a complex issue, the context (which files they looked at, what risks they identified) is easily lost during handoff to teammates or AI agents.
+**Why it matters:** TraceAI visualizes structural dependencies to prevent breaking changes and saves exploration paths ("traces") so context is never lost, saving hours of developer time.
 
-## Architecture
+## Selected Entire track and why Entire is essential
+**Tracks:** Checkpoint-Native Developer Experience + Graph Intelligence (and Best Use of Databricks).
+**Why Entire is Essential:**
+- **Entire Graph** provides the deterministic, AST-level dependency mapping that drives our visual codebase explorer and risk reports. Regular grep/search cannot reliably map direct and transitive dependents.
+- **Entire Checkpoints** are fundamental to TraceAI's "Session Manager". They allow developers to snapshot a complex debugging/exploration session and easily hand it off to another developer or agent.
 
-TraceAI is built with React, TanStack Router, and Tailwind CSS. It integrates:
-- **Entire Graph:** For structural dependency mapping, generating blast radius metrics, and codebase visualization.
-- **Entire Checkpoints:** For preserving "Traces" (developer sessions) containing files explored and findings.
-- **Databricks:** For analytics dashboards tracking risk trends, complexity hotspots, and change frequencies over time.
+## Architecture and main workflow
+TraceAI is built using React, TanStack Router, and Tailwind CSS.
+**Main Workflow:**
+1. A developer visits the **Dashboard** to see overall codebase risk trends (powered by Databricks).
+2. They use the **Impact Analyzer** (powered by Entire Graph) to see the blast radius of a specific function or component they want to change.
+3. They save this exploration path and findings as a "Trace Session" (powered by Entire Checkpoints) which can be instantly resumed by a teammate or AI agent.
 
-## Entire Graph Findings
-- Successfully mapped repository structure and identified critical path dependencies.
-- Surfaced high-risk modules with extreme coupling (e.g., `db.client.ts` and `auth.service.ts`).
-- Demonstrated how a change in a core component propagates through transitive dependencies.
+## Entire Graph findings and verification
+During development, we actively used Entire Graph to verify our codebase structure:
+- **Impact Analysis:** We ran `entire graph impact "TraceApp"` and verified that it serves as the root component with 0 direct/transitive callers, but correctly identified its dependencies like `react.useState` and `cn` (from `src/lib/utils.ts`).
+- **Semantic Diff:** We ran `entire graph diff --base HEAD~1 --head HEAD` which perfectly captured structural additions at an entity level (e.g., adding `AGENTS.md` and `CLAUDE.md` sections) rather than just raw string diffs, verifying the depth of the graph engine.
 
-## Noon Curveball Adaptation
+## Noon Curveball: what changed and how we adapted
 *(Pending 12:00 PM constraint)*
 
-## Checkpoint Links
-- **Checkpoints:** `ckpt-abc123`, `ckpt-def456`, `ckpt-ghi789`
+## Checkpoint links and what each checkpoint proves
+- **Initial Checkpoint (cd72444):** Initial understanding and intended architecture setup. Proves we established the core UI structure (Dashboard, Session Manager, Graph Explorer, Impact Analyzer) and the data layer mapping before integrating real CLI data.
+- *(Pending)*: The last stable state before the Noon Curveball.
+- *(Pending)*: Response to the Noon Curveball.
+- *(Pending)*: Final implementation and verification.
 
-## Setup Instructions
+## Setup, run and test instructions
 1. Install dependencies: `npm install`
 2. Run the development server: `npm run dev`
 3. Entire CLI setup:
    ```bash
    entire login
    entire repo mirror create
-   entire enable -y --agent TraceAI-Agent
+   entire repo clone /gh/YOUR-GITHUB-HANDLE/YOUR-REPOSITORY
+   cd trace-your-code-companion
+   entire enable -y --agent gemini
    entire plugin install graph
    entire graph init-agents --repo .
    ```
+
+## Databricks use, data sources and limitations (if applicable)
+**Track:** Best Use of Databricks.
+Databricks powers the Analytics dashboard in TraceAI. It aggregates data on change frequency, code complexity hotspots, and risk scores over time. This materially improves the product by allowing teams to track architectural drift historically. 
+
+## Known limitations and next steps
+- **Known Limitations:** The Databricks visualization and Graph/Checkpoint integrations currently rely on a rich mock data layer (`src/lib/mock-data.ts`) to match the API shapes while we await live workspace credentials and complete the CLI integration.
+- **Next Steps:** Swap the mock data layer for live calls to the Entire CLI (`entire graph impact`, `entire checkpoint search`) and Databricks SQL endpoint, pushing this into production readiness.
