@@ -53,6 +53,53 @@ const chatAction = createServerFn({ method: "POST" })
     return await sarvamResponse.json();
   });
 
+function renderMarkdown(text: string): string {
+  let html = text
+    // Escape HTML entities first
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    // Code blocks (```)
+    .replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) =>
+      `<pre class="bg-muted/60 rounded-lg p-3 overflow-x-auto text-xs my-2"><code>${code.trim()}</code></pre>`)
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
+    // Headers
+    .replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold mt-3 mb-1">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="text-lg font-semibold mt-4 mb-1">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
+    // Bold & italic
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Tables — simple conversion
+    .replace(/^\|(.+)\|$/gm, (match) => {
+      const cells = match.split('|').filter(Boolean).map(c => c.trim());
+      if (cells.every(c => /^[-:]+$/.test(c))) return ''; // separator row
+      const tag = 'td';
+      return `<tr>${cells.map(c => `<${tag} class="border border-border/40 px-2 py-1 text-xs">${c}</${tag}>`).join('')}</tr>`;
+    })
+    // Unordered lists
+    .replace(/^[-*] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    // Ordered lists
+    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
+    // Paragraphs (double newline)
+    .replace(/\n\n/g, '</p><p class="my-1.5">')
+    // Single newlines
+    .replace(/\n/g, '<br/>');
+
+  // Wrap table rows
+  if (html.includes('<tr>')) {
+    html = html.replace(/(<tr>[\s\S]*?<\/tr>(?:<br\/>)?)+/g, (match) =>
+      `<table class="border-collapse my-2 w-full text-left">${match.replace(/<br\/>/g, '')}</table>`);
+  }
+
+  // Wrap loose <li> in <ul>
+  html = html.replace(/(<li[^>]*>[\s\S]*?<\/li>(?:<br\/>)?)+/g, (match) =>
+    `<ul class="my-1">${match.replace(/<br\/>/g, '')}</ul>`);
+
+  return `<p class="my-1.5">${html}</p>`;
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [{ title: "TraceAI" }, { name: "description", content: "What should we work on?" }],
@@ -297,10 +344,14 @@ function TraceApp() {
                       "px-4 py-3 text-[15px] leading-relaxed max-w-[85%]",
                       msg.role === "user"
                         ? "bg-muted text-foreground rounded-2xl rounded-tr-sm"
-                        : "text-foreground",
+                        : "text-foreground prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 max-w-none",
                     )}
                   >
-                    {msg.content}
+                    {msg.role === "ai" ? (
+                      <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                 </div>
               ))}
