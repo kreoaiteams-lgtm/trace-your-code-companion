@@ -121,7 +121,7 @@ function TraceApp() {
       >
         <div className="mx-auto w-full max-w-3xl px-6 pt-12 flex flex-col">
           {isInitialScreen ? (
-            <div className="flex w-full flex-col items-center justify-center pt-[10vh]">
+            <div className="flex w-full flex-col items-center justify-center pt-[22vh]">
               {/* Center Hero */}
               <div className="flex flex-col items-center text-center slide-up mb-12">
                 <h1 className="text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
