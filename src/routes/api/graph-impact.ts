@@ -6,19 +6,33 @@ export const APIRoute = createAPIFileRoute("/api/graph-impact")({
     const symbol = url.searchParams.get("symbol");
 
     if (!symbol) {
-      return new Response(
-        JSON.stringify({ error: "Missing ?symbol= query parameter" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Missing ?symbol= query parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     try {
       // Use child_process to call the entire CLI
-      const { execSync } = await import("node:child_process");
+      const { execFileSync } = await import("node:child_process");
       const cwd = process.cwd();
 
-      const raw = execSync(
-        `entire graph impact --repo "${cwd}" --symbol "${symbol}" --format json --depth 2 --limit 20`,
+      const raw = execFileSync(
+        "entire",
+        [
+          "graph",
+          "impact",
+          "--repo",
+          cwd,
+          "--symbol",
+          symbol,
+          "--format",
+          "json",
+          "--depth",
+          "2",
+          "--limit",
+          "20",
+        ],
         { encoding: "utf-8", timeout: 15_000, maxBuffer: 1024 * 1024 },
       );
 
@@ -35,10 +49,10 @@ export const APIRoute = createAPIFileRoute("/api/graph-impact")({
       const message =
         err instanceof Error ? err.message : "Unknown error running entire graph impact";
 
-      return new Response(
-        JSON.stringify({ error: message }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   },
 });

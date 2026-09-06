@@ -18,39 +18,42 @@ import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
 import { createServerFn } from "@tanstack/react-start";
 
-export const chatAction = createServerFn("POST", async (payload: { messages: any[] }) => {
-  const apiKey = process.env.SARVAM_API_KEY;
+export const chatAction = createServerFn(
+  "POST",
+  async (payload: { messages: Array<{ role: string; content: string }> }) => {
+    const apiKey = process.env.SARVAM_API_KEY;
 
-  if (!apiKey) {
-    throw new Error('SARVAM_API_KEY is not configured in the environment');
-  }
+    if (!apiKey) {
+      throw new Error("SARVAM_API_KEY is not configured in the environment");
+    }
 
-  const { messages } = payload;
-  if (!messages || !Array.isArray(messages)) {
-    throw new Error('Invalid messages payload');
-  }
+    const { messages } = payload;
+    if (!messages || !Array.isArray(messages)) {
+      throw new Error("Invalid messages payload");
+    }
 
-  const sarvamResponse = await fetch('https://api.sarvam.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-subscription-key': apiKey,
-    },
-    body: JSON.stringify({
-      model: 'sarvam-105b',
-      messages: messages,
-      temperature: 0.7,
-    }),
-  });
+    const sarvamResponse = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-subscription-key": apiKey,
+      },
+      body: JSON.stringify({
+        model: "sarvam-105b",
+        messages: messages,
+        temperature: 0.7,
+      }),
+    });
 
-  if (!sarvamResponse.ok) {
-    const errorText = await sarvamResponse.text();
-    console.error("Sarvam API Error:", errorText);
-    throw new Error(`Sarvam API returned status ${sarvamResponse.status}`);
-  }
+    if (!sarvamResponse.ok) {
+      const errorText = await sarvamResponse.text();
+      console.error("Sarvam API Error:", errorText);
+      throw new Error(`Sarvam API returned status ${sarvamResponse.status}`);
+    }
 
-  return await sarvamResponse.json();
-});
+    return await sarvamResponse.json();
+  },
+);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -193,7 +196,7 @@ function TraceApp() {
 
     try {
       const data = await chatAction({ messages: apiMessages });
-      
+
       const content =
         data?.choices?.[0]?.message?.content ??
         "I wasn't able to generate a response. Please try again.";
@@ -402,7 +405,7 @@ function TraceApp() {
           </p>
           <div className="flex items-center gap-1 text-[11px] text-emerald-600/80 dark:text-emerald-500/70 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full">
             <ShieldCheck className="size-3" />
-            <span>Local & Private</span>
+            <span>Local &amp; Private</span>
           </div>
         </div>
       </div>
