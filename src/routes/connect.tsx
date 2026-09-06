@@ -18,6 +18,7 @@ import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/connect")({
@@ -100,6 +101,8 @@ function ConnectRepoPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedRepo, setConnectedRepo] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"url" | "repos">("url");
+  const [githubRepos, setGithubRepos] = useState<any[]>([]);
+  const [loadingRepos, setLoadingRepos] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -107,9 +110,51 @@ function ConnectRepoPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  useEffect(() => {
+    async function fetchRepos() {
+      if (activeTab !== "repos" || githubRepos.length > 0) return;
+      
+      setLoadingRepos(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.provider_token;
+        
+        if (token) {
+          const response = await fetch("https://api.github.com/user/repos?sort=updated&per_page=30", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/vnd.github.v3+json",
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setGithubRepos(data.map((r: any) => ({
+              name: r.name,
+              fullName: r.full_name,
+              description: r.description || "",
+              language: r.language || "Unknown",
+              languageColor: "#6b7280", // default gray, could be mapped dynamically
+              stars: r.stargazers_count,
+              forks: r.forks_count,
+              isPrivate: r.private,
+              updatedAt: new Date(r.updated_at).toLocaleDateString(),
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch GitHub repos:", err);
+      } finally {
+        setLoadingRepos(false);
+      }
+    }
+    
+    fetchRepos();
+  }, [activeTab]);
+
   if (!isAuthenticated) return null;
 
-  const filteredRepos = mockUserRepos.filter(
+  const filteredRepos = githubRepos.filter(
     (repo) =>
       repo.name.toLowerCase().includes(search.toLowerCase()) ||
       repo.description.toLowerCase().includes(search.toLowerCase()),
