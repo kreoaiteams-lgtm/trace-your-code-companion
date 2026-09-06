@@ -20,10 +20,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  type GraphNode,
-  type ImpactReport,
-} from "@/lib/types";
+import { type GraphNode, type ImpactReport } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { entireGraphData } from "@/lib/entire-graph-data";
 import { createTraceSession } from "@/lib/trace-store";
@@ -92,6 +89,10 @@ function ImpactAnalyzer() {
   const [liveGraphData, setLiveGraphData] = useState<any | null>(null);
   const [liveGraphLoading, setLiveGraphLoading] = useState(false);
   const [liveGraphError, setLiveGraphError] = useState<string | null>(null);
+  const [graphCommand, setGraphCommand] = useState("search");
+  const [graphQuery, setGraphQuery] = useState("");
+  const [graphQueryResult, setGraphQueryResult] = useState<any | null>(null);
+  const [graphQueryLoading, setGraphQueryLoading] = useState(false);
 
   const filteredFiles = entireGraphData.nodes
     .filter(
@@ -121,6 +122,26 @@ function ImpactAnalyzer() {
     }
   };
 
+  const runGraphQuery = async () => {
+    if (!graphQuery.trim()) return;
+    setGraphQueryLoading(true);
+    setGraphQueryResult(null);
+    try {
+      const response = await fetch(
+        `/api/graph-query?command=${graphCommand}&query=${encodeURIComponent(graphQuery)}`,
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Entire Graph query failed");
+      setGraphQueryResult(data);
+    } catch (error) {
+      setGraphQueryResult({
+        error: error instanceof Error ? error.message : "Entire Graph query failed",
+      });
+    } finally {
+      setGraphQueryLoading(false);
+    }
+  };
+
   const analyzeFile = async (node: GraphNode) => {
     setSelectedFile(node.id);
     setCheckpointSaved(false);
@@ -130,8 +151,12 @@ function ImpactAnalyzer() {
     setSymbolQuery(symbolName);
     runLiveGraphAnalysis(symbolName);
 
-    const { data } = await supabase.from('impact_reports').select('*').eq('target_file', node.path).maybeSingle();
-    
+    const { data } = await supabase
+      .from("impact_reports")
+      .select("*")
+      .eq("target_file", node.path)
+      .maybeSingle();
+
     if (data) {
       setActiveReport({
         targetFile: data.target_file,
@@ -143,7 +168,7 @@ function ImpactAnalyzer() {
         affectedTests: data.affected_tests,
         suggestions: data.suggestions,
         severity: data.severity,
-        createdAt: data.created_at
+        createdAt: data.created_at,
       } as ImpactReport);
       return;
     }
@@ -252,7 +277,9 @@ function ImpactAnalyzer() {
           <div className="mt-3 pt-3 border-t border-border/50">
             <div className="flex items-center gap-1.5 mb-2">
               <Network className="size-3.5 text-emerald-500" />
-              <span className="text-[11px] font-semibold uppercase text-emerald-600 tracking-wider">Live Graph</span>
+              <span className="text-[11px] font-semibold uppercase text-emerald-600 tracking-wider">
+                Live Graph
+              </span>
             </div>
             <div className="relative">
               <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -550,6 +577,56 @@ function ImpactAnalyzer() {
               </div>
             </div>
 
+            {/* Entire Graph query workspace */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Search className="size-5 text-slate-500" />
+                <div>
+                  <h3 className="font-serif text-lg font-medium">Explore with Entire Graph</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Search, define, and trace relationships in the repository.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 md:flex-row">
+                <select
+                  value={graphCommand}
+                  onChange={(event) => setGraphCommand(event.target.value)}
+                  className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+                >
+                  <option value="search">Search</option>
+                  <option value="def">Definition</option>
+                  <option value="neighbors">Neighbors</option>
+                </select>
+                <input
+                  value={graphQuery}
+                  onChange={(event) => setGraphQuery(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && runGraphQuery()}
+                  placeholder={
+                    graphCommand === "search" ? "Where is authentication handled?" : "AuthProvider"
+                  }
+                  className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-emerald-500"
+                />
+                <Button
+                  onClick={runGraphQuery}
+                  disabled={graphQueryLoading || !graphQuery.trim()}
+                  className="h-10 rounded-lg bg-slate-950 text-white hover:bg-slate-800"
+                >
+                  {graphQueryLoading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Search className="size-4" />
+                  )}
+                  Run graph query
+                </Button>
+              </div>
+              {graphQueryResult && (
+                <pre className="mt-4 max-h-64 overflow-auto rounded-lg border border-border bg-background p-4 text-xs leading-5 text-foreground">
+                  {JSON.stringify(graphQueryResult, null, 2)}
+                </pre>
+              )}
+            </div>
+
             {/* Live Entire Graph Section */}
             <div className="rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 p-6 mt-6">
               <div className="flex items-center gap-2 mb-4">
@@ -579,11 +656,19 @@ function ImpactAnalyzer() {
                   {/* Focus Symbol */}
                   {liveGraphData.focus && (
                     <div className="rounded-lg bg-background border border-border p-4">
-                      <p className="text-xs font-medium uppercase text-muted-foreground mb-1">Focus Symbol</p>
-                      <code className="text-sm font-mono font-semibold text-foreground">{liveGraphData.focus.qualified_name || liveGraphData.focus.name}</code>
+                      <p className="text-xs font-medium uppercase text-muted-foreground mb-1">
+                        Focus Symbol
+                      </p>
+                      <code className="text-sm font-mono font-semibold text-foreground">
+                        {liveGraphData.focus.qualified_name || liveGraphData.focus.name}
+                      </code>
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span className="bg-muted px-1.5 py-0.5 rounded">{liveGraphData.focus.kind}</span>
-                        <span>{liveGraphData.focus.file_path}:{liveGraphData.focus.start_line}</span>
+                        <span className="bg-muted px-1.5 py-0.5 rounded">
+                          {liveGraphData.focus.kind}
+                        </span>
+                        <span>
+                          {liveGraphData.focus.file_path}:{liveGraphData.focus.start_line}
+                        </span>
                         <span>{liveGraphData.focus.language}</span>
                       </div>
                     </div>
@@ -592,14 +677,37 @@ function ImpactAnalyzer() {
                   {/* Stats Row */}
                   <div className="grid grid-cols-4 gap-3">
                     {[
-                      { label: "Callers", value: liveGraphData.callers?.total ?? 0, color: "#f59e0b" },
-                      { label: "Callees", value: liveGraphData.callees?.total ?? 0, color: "#6366f1" },
-                      { label: "Co-Changes", value: liveGraphData.co_changes?.total ?? 0, color: "#8b5cf6" },
-                      { label: "Type Users", value: liveGraphData.type_consumers?.total ?? 0, color: "#22c55e" },
+                      {
+                        label: "Callers",
+                        value: liveGraphData.callers?.total ?? 0,
+                        color: "#f59e0b",
+                      },
+                      {
+                        label: "Callees",
+                        value: liveGraphData.callees?.total ?? 0,
+                        color: "#6366f1",
+                      },
+                      {
+                        label: "Co-Changes",
+                        value: liveGraphData.co_changes?.total ?? 0,
+                        color: "#8b5cf6",
+                      },
+                      {
+                        label: "Type Users",
+                        value: liveGraphData.type_consumers?.total ?? 0,
+                        color: "#22c55e",
+                      },
                     ].map((stat) => (
-                      <div key={stat.label} className="rounded-lg bg-background border border-border p-3 text-center">
-                        <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                        <p className="text-[10px] uppercase font-medium text-muted-foreground">{stat.label}</p>
+                      <div
+                        key={stat.label}
+                        className="rounded-lg bg-background border border-border p-3 text-center"
+                      >
+                        <p className="text-2xl font-bold" style={{ color: stat.color }}>
+                          {stat.value}
+                        </p>
+                        <p className="text-[10px] uppercase font-medium text-muted-foreground">
+                          {stat.label}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -607,25 +715,43 @@ function ImpactAnalyzer() {
                   {/* Callers */}
                   {liveGraphData.callers?.entries?.length > 0 && (
                     <div className="rounded-lg border border-border bg-background">
-                      <button className="flex w-full items-center justify-between p-3 text-left" onClick={() => toggleSection("callers")}>
+                      <button
+                        className="flex w-full items-center justify-between p-3 text-left"
+                        onClick={() => toggleSection("callers")}
+                      >
                         <div className="flex items-center gap-2">
                           <AlertTriangle className="size-4 text-amber-500" />
-                          <h4 className="text-sm font-medium">Who calls this ({liveGraphData.callers.total})</h4>
+                          <h4 className="text-sm font-medium">
+                            Who calls this ({liveGraphData.callers.total})
+                          </h4>
                         </div>
-                        {expandedSections.has("callers") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                        {expandedSections.has("callers") ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
+                        )}
                       </button>
                       {expandedSections.has("callers") && (
                         <div className="border-t border-border px-3 pb-3">
                           {liveGraphData.callers.entries.map((entry: any, i: number) => (
-                            <div key={i} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                            <div
+                              key={i}
+                              className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                            >
                               <ArrowRight className="size-3 text-amber-500" />
                               <div className="min-w-0">
-                                <code className="text-xs font-mono font-medium">{entry.endpoint?.name}</code>
+                                <code className="text-xs font-mono font-medium">
+                                  {entry.endpoint?.name}
+                                </code>
                                 {entry.endpoint?.file_path && (
-                                  <p className="text-[10px] text-muted-foreground truncate">{entry.endpoint.file_path}:{entry.endpoint.start_line}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">
+                                    {entry.endpoint.file_path}:{entry.endpoint.start_line}
+                                  </p>
                                 )}
                               </div>
-                              <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">depth {entry.depth}</span>
+                              <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                depth {entry.depth}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -636,24 +762,42 @@ function ImpactAnalyzer() {
                   {/* Callees */}
                   {liveGraphData.callees?.entries?.length > 0 && (
                     <div className="rounded-lg border border-border bg-background">
-                      <button className="flex w-full items-center justify-between p-3 text-left" onClick={() => toggleSection("callees")}>
+                      <button
+                        className="flex w-full items-center justify-between p-3 text-left"
+                        onClick={() => toggleSection("callees")}
+                      >
                         <div className="flex items-center gap-2">
                           <Zap className="size-4 text-indigo-500" />
-                          <h4 className="text-sm font-medium">What it calls ({liveGraphData.callees.total})</h4>
+                          <h4 className="text-sm font-medium">
+                            What it calls ({liveGraphData.callees.total})
+                          </h4>
                         </div>
-                        {expandedSections.has("callees") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                        {expandedSections.has("callees") ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
+                        )}
                       </button>
                       {expandedSections.has("callees") && (
                         <div className="border-t border-border px-3 pb-3">
                           {liveGraphData.callees.entries.map((entry: any, i: number) => (
-                            <div key={i} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                            <div
+                              key={i}
+                              className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                            >
                               <ArrowRight className="size-3 text-indigo-500" />
                               <div className="min-w-0">
-                                <code className="text-xs font-mono font-medium">{entry.endpoint?.qualified_name || entry.endpoint?.name}</code>
+                                <code className="text-xs font-mono font-medium">
+                                  {entry.endpoint?.qualified_name || entry.endpoint?.name}
+                                </code>
                                 {entry.endpoint?.file_path && (
-                                  <p className="text-[10px] text-muted-foreground truncate">{entry.endpoint.file_path}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">
+                                    {entry.endpoint.file_path}
+                                  </p>
                                 )}
-                                {entry.endpoint?.external && <span className="ml-1 text-[10px] text-blue-500">(external)</span>}
+                                {entry.endpoint?.external && (
+                                  <span className="ml-1 text-[10px] text-blue-500">(external)</span>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -665,20 +809,34 @@ function ImpactAnalyzer() {
                   {/* Co-Changes */}
                   {liveGraphData.co_changes?.entries?.length > 0 && (
                     <div className="rounded-lg border border-border bg-background">
-                      <button className="flex w-full items-center justify-between p-3 text-left" onClick={() => toggleSection("cochanges")}>
+                      <button
+                        className="flex w-full items-center justify-between p-3 text-left"
+                        onClick={() => toggleSection("cochanges")}
+                      >
                         <div className="flex items-center gap-2">
                           <GitBranch className="size-4 text-purple-500" />
-                          <h4 className="text-sm font-medium">Co-Changed Files ({liveGraphData.co_changes.total})</h4>
+                          <h4 className="text-sm font-medium">
+                            Co-Changed Files ({liveGraphData.co_changes.total})
+                          </h4>
                         </div>
-                        {expandedSections.has("cochanges") ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                        {expandedSections.has("cochanges") ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
+                        )}
                       </button>
                       {expandedSections.has("cochanges") && (
                         <div className="border-t border-border px-3 pb-3">
                           {liveGraphData.co_changes.entries.map((entry: any, i: number) => (
-                            <div key={i} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
+                            <div
+                              key={i}
+                              className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                            >
                               <ArrowRight className="size-3 text-purple-500" />
                               <div className="min-w-0">
-                                <code className="text-xs font-mono font-medium">{entry.endpoint?.name}</code>
+                                <code className="text-xs font-mono font-medium">
+                                  {entry.endpoint?.name}
+                                </code>
                                 <p className="text-[10px] text-muted-foreground">{entry.detail}</p>
                               </div>
                             </div>
@@ -691,7 +849,10 @@ function ImpactAnalyzer() {
                   {/* Graph Stats */}
                   {liveGraphData.stats && (
                     <div className="flex items-center gap-4 text-[10px] text-muted-foreground pt-2 border-t border-border/50">
-                      <span>Graph: {liveGraphData.stats.files} files · {liveGraphData.stats.symbols} symbols · {liveGraphData.stats.relations} relations</span>
+                      <span>
+                        Graph: {liveGraphData.stats.files} files · {liveGraphData.stats.symbols}{" "}
+                        symbols · {liveGraphData.stats.relations} relations
+                      </span>
                       <span className="ml-auto">{liveGraphData.total_latency_ms}ms</span>
                     </div>
                   )}
