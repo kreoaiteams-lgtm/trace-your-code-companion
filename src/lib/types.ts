@@ -58,6 +58,7 @@ export interface TraceSession {
   checkpointId: string;
   tags: string[];
   isRedacted?: boolean;
+  repository: string;
 }
 
 export interface SessionFinding {

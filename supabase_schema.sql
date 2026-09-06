@@ -43,7 +43,8 @@ CREATE TABLE trace_sessions (
     questions_asked TEXT[] DEFAULT '{}',
     checkpoint_id TEXT,
     tags TEXT[] DEFAULT '{}',
-    is_redacted BOOLEAN DEFAULT FALSE
+    is_redacted BOOLEAN DEFAULT FALSE,
+    repository TEXT DEFAULT 'trace-web'
 );
 
 -- 4. Session Findings

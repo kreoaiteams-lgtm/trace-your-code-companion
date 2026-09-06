@@ -36,11 +36,7 @@ const navItems = [
   { label: "Analytics", icon: BarChart3, href: "/analytics" },
 ];
 
-const repositories = [
-  { name: "trace-web", language: "TypeScript", color: "bg-repo-blue" },
-  { name: "signal-api", language: "Python", color: "bg-repo-green" },
-  { name: "design-system", language: "CSS", color: "bg-repo-pink" },
-];
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const routerState = useRouterState();
@@ -118,13 +114,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Button>
           </div>
           <div className="space-y-0.5">
-            {repositories.map((repo) => {
-              const isActive = activeRepo === repo.name;
+            {Object.keys(conversations).map((repoName, i) => {
+              const isActive = activeRepo === repoName;
+              const colors = ["bg-repo-blue", "bg-repo-green", "bg-repo-pink", "bg-foreground"];
+              const color = colors[i % colors.length];
+              
               return (
-                <div key={repo.name} className="space-y-0.5">
+                <div key={repoName} className="space-y-0.5">
                   <Button
                     variant="ghost"
-                    onClick={() => setActiveRepo(repo.name)}
+                    onClick={() => setActiveRepo(repoName)}
                     className={cn(
                       "w-full justify-start gap-2 rounded-lg px-3 font-normal text-sm transition-all duration-200",
                       isActive
@@ -132,8 +131,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
-                    <span className={cn("size-2.5 rounded-full shadow-sm", repo.color)} />
-                    <span className="truncate">{repo.name}</span>
+                    <span className={cn("size-2.5 rounded-full shadow-sm", color)} />
+                    <span className="truncate">{repoName}</span>
                     <ChevronDown
                       className={cn(
                         "ml-auto size-3.5 transition-transform",
@@ -143,7 +142,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   </Button>
                   {isActive && (
                     <div className="ml-3 border-l border-border pl-2">
-                      {(conversations[repo.name] ?? []).map((conversation) => (
+                      {(conversations[repoName] ?? []).map((conversation) => (
                         <button
                           type="button"
                           key={conversation}
@@ -161,7 +160,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       ))}
                       <button
                         type="button"
-                        onClick={() => addConversation(repo.name)}
+                        onClick={() => addConversation(repoName)}
                         className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                       >
                         <Plus className="size-3" /> New conversation

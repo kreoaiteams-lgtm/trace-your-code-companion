@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
+import { readTraceSessions } from "@/lib/trace-store";
 
 export interface User {
   name: string;
@@ -15,26 +17,83 @@ interface AuthContextType {
   conversations: Record<string, string[]>;
   setActiveConversation: (conversation: string) => void;
   addConversation: (repo: string, title?: string) => string;
-  login: (user: User) => void;
+  login: (user: User) => void; // Keep for fallback, though we use OAuth now
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("trace-user");
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [activeRepo, setActiveRepo] = useState<string>("");
+  const [conversations, setConversations] = useState<Record<string, string[]>>({});
+  const [activeConversation, setActiveConversationState] = useState<string>("");
 
-  const [activeRepo, setActiveRepo] = useState<string>("trace-web");
-  const [conversations, setConversations] = useState<Record<string, string[]>>({
-    "trace-web": ["Architecture brainstorm", "Auth flow review"],
-    "signal-api": ["API reliability ideas"],
-    "design-system": ["Accessibility audit"],
-  });
-  const [activeConversation, setActiveConversationState] = useState("Architecture brainstorm");
+  useEffect(() => {
+    // 1. Setup Auth
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const metadata = session.user.user_metadata;
+        setUser({
+          name: metadata.full_name || metadata.name || session.user.email || "User",
+          username: metadata.user_name || metadata.preferred_username || "trace-user",
+          avatar: metadata.avatar_url,
+        });
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const metadata = session.user.user_metadata;
+        setUser({
+          name: metadata.full_name || metadata.name || session.user.email || "User",
+          username: metadata.user_name || metadata.preferred_username || "trace-user",
+          avatar: metadata.avatar_url,
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // 2. Fetch real trace sessions
+    const fetchSessions = async () => {
+      const sessions = await readTraceSessions();
+      
+      const newConversations: Record<string, string[]> = {};
+      sessions.forEach(session => {
+        const repo = session.repository || "trace-web";
+        if (!newConversations[repo]) newConversations[repo] = [];
+        // Ensure unique titles if they are duplicated, though IDs are better
+        if (!newConversations[repo].includes(session.title)) {
+           newConversations[repo].push(session.title);
+        }
+      });
+      
+      setConversations(newConversations);
+      
+      // Auto-select first repo and conversation if none selected
+      const repos = Object.keys(newConversations);
+      if (repos.length > 0) {
+        const firstRepo = repos[0];
+        if (!activeRepo) setActiveRepo(firstRepo);
+        if (!activeConversation && newConversations[firstRepo].length > 0) {
+          setActiveConversationState(newConversations[firstRepo][0]);
+        }
+      }
+    };
+
+    fetchSessions();
+
+    const handleUpdate = () => fetchSessions();
+    window.addEventListener("traceai:sessions-updated", handleUpdate);
+    return () => window.removeEventListener("traceai:sessions-updated", handleUpdate);
+  }, [activeRepo, activeConversation]);
 
   const setActiveConversation = (conversation: string) => {
     setActiveConversationState(conversation);
@@ -43,6 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const addConversation = (repo: string, title = "New conversation") => {
     const current = conversations[repo] ?? [];
     const nextTitle = current.includes(title) ? `${title} ${current.length + 1}` : title;
+    
+    // We update local state optimistically, the trace-store event will refresh it
     setConversations((previous) => ({
       ...previous,
       [repo]: [...(previous[repo] ?? []), nextTitle],
@@ -54,12 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (userData: User) => {
     setUser(userData);
-    localStorage.setItem("trace-user", JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("trace-user");
   };
 
   return (

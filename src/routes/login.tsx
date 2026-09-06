@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -28,11 +29,22 @@ function LoginPage() {
     navigate({ to: "/onboarding" });
   };
 
-  const handleGitHubLogin = () => {
+  const handleGitHubLogin = async () => {
     setError("");
     setIsConnecting(true);
-    // Replace this simulated provider flow with GitHub OAuth when credentials are connected.
-    setTimeout(() => finishLogin("Alex Kim", "alexbuilds"), 700);
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/onboarding`
+      }
+    });
+
+    if (error) {
+      setError(error.message);
+      setIsConnecting(false);
+    }
+    // Note: Success will redirect to GitHub and back to /onboarding
   };
 
   const handleManualLogin = (event: FormEvent<HTMLFormElement>) => {

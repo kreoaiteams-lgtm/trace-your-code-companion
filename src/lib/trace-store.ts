@@ -49,6 +49,7 @@ export async function readTraceSessions(): Promise<TraceSession[]> {
       checkpointId: session.checkpoint_id,
       tags: session.tags,
       isRedacted: session.is_redacted,
+      repository: session.repository || "trace-web",
     } as TraceSession;
   });
 }
@@ -60,6 +61,7 @@ export async function createTraceSession(input: {
   findings: SessionFinding[];
   questionsAsked?: string[];
   isRedacted?: boolean;
+  repository?: string;
 }): Promise<TraceSession | null> {
   const now = new Date().toISOString();
   const id = `trace-${Date.now()}`;
@@ -78,6 +80,7 @@ export async function createTraceSession(input: {
     checkpoint_id: `ckpt-local-${Date.now().toString(36)}`,
     tags: ["trace", "impact-analysis"],
     is_redacted: input.isRedacted ?? false,
+    repository: input.repository ?? "trace-web",
   };
 
   const { error } = await supabase.from("trace_sessions").insert(session);
@@ -112,6 +115,7 @@ export async function createTraceSession(input: {
     questionsAsked: session.questions_asked,
     checkpointId: session.checkpoint_id,
     isRedacted: session.is_redacted,
+    repository: session.repository,
     findings: input.findings,
   } as TraceSession;
 }
