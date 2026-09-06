@@ -27,12 +27,17 @@ During development, we actively used Entire Graph to verify our codebase structu
 - **Semantic Diff:** We ran `entire graph diff --base HEAD~1 --head HEAD` which perfectly captured structural additions at an entity level (e.g., adding `AGENTS.md` and `CLAUDE.md` sections) rather than just raw string diffs, verifying the depth of the graph engine.
 
 ## Noon Curveball: what changed and how we adapted
-*(Pending 12:00 PM constraint)*
+**Track 1: Privacy Boundary**
+We adapted our app to handle sensitive repositories where raw prompts/transcripts must not be sent externally. 
+- **Impact Analysis**: We ran `entire graph impact TraceSession` and `SessionFinding` to map the blast radius before changing our data models.
+- **UI Adaptation**: We added an `isRedacted` flag to our data models. The UI now renders prominent "Privacy Boundary Enforced" banners, Lock icon badges, and blurs out redacted descriptions to clearly distinguish incomplete context.
+- **Local Privacy**: We added a "Local & Private" badge to the chat interface to reassure users that prompts stay local.
+- **Tests**: We added a "Security Audit [REDACTED]" session to our mock data as a test case for graceful degradation.
 
 ## Checkpoint links and what each checkpoint proves
 - **Initial Checkpoint (cd72444):** Initial understanding and intended architecture setup. Proves we established the core UI structure (Dashboard, Session Manager, Graph Explorer, Impact Analyzer) and the data layer mapping before integrating real CLI data.
-- *(Pending)*: The last stable state before the Noon Curveball.
-- *(Pending)*: Response to the Noon Curveball.
+- **Pre-Curveball Checkpoint (90ffd26):** The last stable state before the Noon Curveball. Proves the UI was fully functional with simulated chat and mocked session management.
+- **Curveball Response Checkpoint (be02485):** Response to the Noon Curveball. Proves we successfully implemented Track 1 (Privacy Boundary) with redacted session handling, UI warnings, and local execution guarantees.
 - *(Pending)*: Final implementation and verification.
 
 ## Setup, run and test instructions
