@@ -57,6 +57,7 @@ export interface TraceSession {
   findings: SessionFinding[];
   checkpointId: string;
   tags: string[];
+  isRedacted?: boolean;
 }
 
 export interface SessionFinding {
@@ -65,6 +66,7 @@ export interface SessionFinding {
   description: string;
   affectedFiles: string[];
   severity: "low" | "medium" | "high" | "critical";
+  isRedacted?: boolean;
 }
 
 // ---------- Impact Analysis ----------
@@ -609,6 +611,47 @@ export const mockSessions: TraceSession[] = [
     ],
     checkpointId: "ckpt-jkl012",
     tags: ["api", "reliability", "rate-limiting"],
+  },
+  {
+    id: "trace-005",
+    title: "Security Audit [REDACTED]",
+    description:
+      "[REDACTED] Analyzed the core authentication flow for potential vulnerabilities. Some details are hidden to protect sensitive repository information.",
+    createdAt: "2026-09-02T11:00:00Z",
+    updatedAt: "2026-09-02T14:20:00Z",
+    author: "Security Team",
+    authorAvatar: "ST",
+    status: "completed",
+    isRedacted: true,
+    filesExplored: [
+      "src/services/auth.service.ts",
+      "src/middleware.ts",
+    ],
+    questionsAsked: [
+      "[REDACTED] How does the system handle...",
+      "Are there any known CVEs in the dependencies?",
+      "[REDACTED]"
+    ],
+    findings: [
+      {
+        type: "risk",
+        title: "Potential Injection Vulnerability",
+        description: "[REDACTED] Input validation in the auth handler may not sanitize all malicious payloads.",
+        affectedFiles: ["src/services/auth.service.ts"],
+        severity: "critical",
+        isRedacted: true
+      },
+      {
+        type: "warning",
+        title: "Outdated Dependency",
+        description: "The cryptography library is 2 minor versions behind.",
+        affectedFiles: [],
+        severity: "medium",
+        isRedacted: false
+      }
+    ],
+    checkpointId: "ckpt-sec999",
+    tags: ["security", "audit", "redacted"],
   },
 ];
 

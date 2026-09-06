@@ -9,6 +9,7 @@ import {
   Clock,
   FileSearch,
   HelpCircle,
+  Lock,
   Pause,
   Play,
   Search,
@@ -86,8 +87,14 @@ function FindingCard({ finding }: { finding: SessionFinding }) {
             >
               {finding.severity}
             </span>
+            {finding.isRedacted && (
+              <Lock className="size-3 text-muted-foreground/60" />
+            )}
           </div>
-          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+          <p className={cn(
+            "mt-1 text-sm leading-relaxed",
+            finding.isRedacted ? "text-muted-foreground/60 italic" : "text-muted-foreground"
+          )}>
             {finding.description}
           </p>
           {finding.affectedFiles.length > 0 && (
@@ -235,9 +242,13 @@ function SessionManager() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium truncate">{session.title}</h3>
+                    <h3 className="text-sm font-medium truncate flex-1">{session.title}</h3>
+                    {session.isRedacted && <Lock className="size-3.5 text-muted-foreground/60 shrink-0" />}
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                  <p className={cn(
+                    "mt-0.5 text-xs line-clamp-2",
+                    session.isRedacted ? "text-muted-foreground/60 italic" : "text-muted-foreground"
+                  )}>
                     {session.description}
                   </p>
                   <div className="mt-2 flex items-center gap-3">
@@ -283,7 +294,19 @@ function SessionManager() {
             </div>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto p-8">
+          <div className="max-w-4xl mx-auto p-8 flex flex-col h-full">
+            {selectedSession.isRedacted && (
+              <div className="mb-6 rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 flex items-start gap-3">
+                <Lock className="size-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-amber-700 dark:text-amber-500">Privacy Boundary Enforced</h4>
+                  <p className="mt-1 text-sm text-amber-600/80 dark:text-amber-500/80">
+                    This session contains redacted information to protect sensitive repository data. Raw prompts and some details are hidden.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Session Header */}
             <div className="flex items-start justify-between mb-6">
               <div>
@@ -400,14 +423,21 @@ function SessionManager() {
                 Questions Asked
               </h3>
               <div className="space-y-3">
-                {selectedSession.questionsAsked.map((q, i) => (
-                  <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
-                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-                      Q
+                {selectedSession.questionsAsked.map((q, i) => {
+                  const isRedactedQ = selectedSession.isRedacted && q.includes("[REDACTED]");
+                  return (
+                    <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                        Q
+                      </div>
+                      <p className={cn(
+                        "text-sm",
+                        isRedactedQ && "text-muted-foreground/60 italic"
+                      )}>{q}</p>
+                      {isRedactedQ && <Lock className="size-3 text-muted-foreground/40 ml-auto" />}
                     </div>
-                    <p className="text-sm">{q}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

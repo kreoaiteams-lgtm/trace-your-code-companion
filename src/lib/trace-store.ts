@@ -30,6 +30,7 @@ export function createTraceSession(input: {
   filesExplored: string[];
   findings: SessionFinding[];
   questionsAsked?: string[];
+  isRedacted?: boolean;
 }) {
   const now = new Date().toISOString();
   const session: TraceSession = {
@@ -46,6 +47,7 @@ export function createTraceSession(input: {
     findings: input.findings,
     checkpointId: `ckpt-local-${Date.now().toString(36)}`,
     tags: ["trace", "impact-analysis"],
+    isRedacted: input.isRedacted,
   };
 
   writeTraceSessions([session, ...readTraceSessions()]);

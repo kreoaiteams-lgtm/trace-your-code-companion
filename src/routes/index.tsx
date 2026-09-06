@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowUp, Bug, FolderOpen, Hammer, Mic, Plus, RefreshCw, Telescope, Sparkles, User as UserIcon } from "lucide-react";
+import { ArrowUp, Bug, FolderOpen, Hammer, Mic, Plus, RefreshCw, Telescope, Sparkles, User as UserIcon, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -259,8 +259,12 @@ function TraceApp() {
             </div>
           </div>
         </div>
-        <div className="text-center mt-3">
+        <div className="flex justify-between items-center mt-3 px-1">
           <p className="text-[11px] text-muted-foreground/60">TraceAI can make mistakes. Consider verifying important information.</p>
+          <div className="flex items-center gap-1 text-[11px] text-emerald-600/80 dark:text-emerald-500/70 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full">
+            <ShieldCheck className="size-3" />
+            <span>Local & Private</span>
+          </div>
         </div>
       </div>
     </div>
