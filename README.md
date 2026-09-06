@@ -1,33 +1,60 @@
-# TraceAI — Think Better with Your Code
+# TraceAI
 
-TraceAI is a Checkpoint-Native codebase intelligence platform that maps structural dependencies via Entire Graph, provides impact analysis for safe refactoring, and preserves context through Checkpoint-backed sessions.
+## Think better with your code
 
-## 🚀 The Hackathon Project
-This repository contains the UI and Frontend codebase for the **Buildathon 2026** submission. We built this under the **Checkpoint-Native Developer Experience** and **Graph Intelligence** tracks.
+TraceAI is a calm workspace for understanding codebases, exploring ideas, and making better engineering decisions.
 
-### Key Features
-- **Graph Explorer**: Visualize your codebase's dependency graph powered by Entire Graph.
-- **Impact Analyzer**: See the exact blast radius of a file or function change before you make it.
-- **Session Manager**: Save your exploration paths as Checkpoints so you never lose context when handing off to a teammate or AI agent.
-- **Databricks Analytics**: Track codebase complexity and risk trends historically.
+Instead of jumping between repository search, notes, chat, and dependency tools, Trace brings the investigation into one place.
 
-## 🛠️ Tech Stack
-- React + Vite + TypeScript
-- TanStack Router for type-safe routing
-- Tailwind CSS with a soft, vibrant Anthropic typography design system
-- Lucide React for iconography
+## What Trace helps you do
 
-## 🏁 Getting Started
-```sh
-npm install
-npm run dev
+- Understand an unfamiliar repository quickly.
+- Ask questions about architecture and implementation details.
+- Brainstorm features, fixes, and refactoring approaches.
+- See how a change may affect the rest of the codebase.
+- Keep separate conversations organized under each repository.
+- Save useful investigations so you can return to them later.
+- Share clearer technical context with teammates.
+
+## How it works
+
+1. Connect a repository.
+2. Ask TraceAI what you want to understand.
+3. Explore the relationships and context behind the answer.
+4. Compare possible solutions.
+5. Move forward with more confidence.
+
+## The Trace workspace
+
+Every repository gets its own workspace. Inside it, you can keep multiple conversations for different questions, such as:
+
+- Architecture brainstorming
+- Authentication investigations
+- Feature planning
+- Bug analysis
+- Refactoring reviews
+- Release-risk checks
+
+This keeps every idea connected to the codebase it belongs to.
+
+## Built for better decisions
+
+TraceAI is not just another chat window. It helps you move from:
+
+```text
+What does this code do?
+        ↓
+What depends on it?
+        ↓
+What could change?
+        ↓
+What is the safest way forward?
 ```
 
-### Entire CLI Setup
-To utilize the graph intelligence and checkpoints, make sure you have the Entire CLI configured:
-```bash
-entire login
-entire enable -y --agent gemini
-entire plugin install graph
-entire graph init-agents --repo .
-```
+## Product walkthrough
+
+See the ten-page TraceAI walkthrough at [`/ppt`](http://localhost:3000/ppt).
+
+## TraceAI
+
+Understand your code. Ask better questions. Ship with confidence.

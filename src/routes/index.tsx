@@ -16,6 +16,41 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
+import { createServerFn } from "@tanstack/react-start";
+
+export const chatAction = createServerFn("POST", async (payload: { messages: any[] }) => {
+  const apiKey = process.env.SARVAM_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('SARVAM_API_KEY is not configured in the environment');
+  }
+
+  const { messages } = payload;
+  if (!messages || !Array.isArray(messages)) {
+    throw new Error('Invalid messages payload');
+  }
+
+  const sarvamResponse = await fetch('https://api.sarvam.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-subscription-key': apiKey,
+    },
+    body: JSON.stringify({
+      model: 'sarvam-105b',
+      messages: messages,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!sarvamResponse.ok) {
+    const errorText = await sarvamResponse.text();
+    console.error("Sarvam API Error:", errorText);
+    throw new Error(`Sarvam API returned status ${sarvamResponse.status}`);
+  }
+
+  return await sarvamResponse.json();
+});
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -157,15 +192,8 @@ function TraceApp() {
     ];
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages }),
-      });
-
-      if (!res.ok) throw new Error(`API returned ${res.status}`);
-
-      const data = await res.json();
+      const data = await chatAction({ messages: apiMessages });
+      
       const content =
         data?.choices?.[0]?.message?.content ??
         "I wasn't able to generate a response. Please try again.";
@@ -181,7 +209,7 @@ function TraceApp() {
       const fallbackMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "ai",
-        content: `I can certainly help you with that! Let's take a look at the current architecture in ${activeRepo}. (Note: AI backend is currently unavailable — this is a fallback response.)`,
+        content: `I can certainly help you with that! Let's take a look at the current architecture in ${activeRepo}. (Note: AI backend is currently unavailable — this is a fallback response. Error: ${(err as Error).message})`,
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
